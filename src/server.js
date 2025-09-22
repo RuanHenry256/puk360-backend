@@ -16,7 +16,7 @@ import User from "./models/User.js"; // Example model
   try {
     await sequelize.authenticate();
     console.log("✅ Connected to Azure Database");
-    await sequelize.sync({ alter: true }); 
+    await sequelize.sync(); // just sync models without altering columns
     console.log("✅ Database synced");
   } catch (error) {
     console.error("❌ Database connection failed:", error);
