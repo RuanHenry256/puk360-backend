@@ -7,6 +7,23 @@ import eventRoutes from './routes/eventRoutes.js';
 import reviewRoutes from './routes/reviewRoutes.js';
 import adminRoutes from './routes/adminRoutes.js';
 
+
+import sequelize from "./config/db.js";
+import User from "./models/User.js"; // Example model
+
+// Test DB connection
+(async () => {
+  try {
+    await sequelize.authenticate();
+    console.log("✅ Connected to Azure Database");
+    await sequelize.sync({ alter: true }); 
+    console.log("✅ Database synced");
+  } catch (error) {
+    console.error("❌ Database connection failed:", error);
+  }
+})();
+
+
 dotenv.config();
 const app = express();
 
