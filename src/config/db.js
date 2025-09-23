@@ -1,7 +1,19 @@
-import { Sequelize } from "sequelize";
-import dotenv from "dotenv";
+import { Sequelize } from 'sequelize';
+import dotenv from 'dotenv';
+import sequelize from './src/config/db.js';
 
 dotenv.config();
+
+(async () => {
+  try {
+    await sequelize.authenticate();
+    console.log('Database connection successful');
+  } catch (error) {
+    console.error('Database connection failed:', error);
+  } finally {
+    await sequelize.close();
+  }
+})();
 
 const sequelize = new Sequelize(
   process.env.DB_NAME,
