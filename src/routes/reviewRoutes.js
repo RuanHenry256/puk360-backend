@@ -1,3 +1,7 @@
+/**
+ * Review routes.
+ * Endpoints for adding, listing, and deleting reviews for events.
+ */
 import { Router } from 'express';
 import {
   addReview,

@@ -1,3 +1,7 @@
+/**
+ * Admin routes.
+ * Routes for moderating events/hosts and viewing simple analytics.
+ */
 import { Router } from 'express';
 import {
   getPendingEvents,
