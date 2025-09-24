@@ -36,6 +36,7 @@ app.use('/api/auth', authRoutes);
 app.use('/api/events', eventRoutes);
 app.use('/api', reviewRoutes);  // nested under events
 app.use('/api/admin', adminRoutes);
+app.use('/api/events', rsvpRoutes);
 
 // Default route
 app.get('/', (req, res) => {
