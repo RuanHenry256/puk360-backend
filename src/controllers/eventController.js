@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 import Event from '../models/Event.js';
 
 // Get all events
@@ -17,6 +18,14 @@ export const getAllEvents = async (req, res) => {
       details: error.message,
     });
   }
+=======
+/**
+ * Event controller.
+ * Stubs providing CRUD handlers for events (list, read, create, update, delete).
+ */
+export const getAllEvents = (req, res) => {
+  res.json([{ id: 1, title: "Welcome Bash", date: "2025-08-20" }]);
+>>>>>>> ca054b5 (Added LoginScreen functionality that uses the database connection to compare user input and to validate credentials. Added updates to controllers, routes, middleware and docs)
 };
 
 // Get event by ID

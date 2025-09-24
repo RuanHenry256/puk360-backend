@@ -1,3 +1,7 @@
+/**
+ * Review controller.
+ * Stubs for adding, listing, and deleting reviews for events.
+ */
 export const addReview = (req, res) => {
   res.status(201).json({ message: "Review added", data: req.body });
 };
