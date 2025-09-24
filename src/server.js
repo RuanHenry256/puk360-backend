@@ -7,8 +7,12 @@ import eventRoutes from './routes/eventRoutes.js';
 import reviewRoutes from './routes/reviewRoutes.js';
 import adminRoutes from './routes/adminRoutes.js';
 
+import swaggerUi from 'swagger-ui-express';
+import swaggerSpecs from './swagger.js';
+app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpecs));
 
-import sequelize from "./config/db.js";
+
+import sequelize from "./config/config.cjs";
 import User from "./models/User.js"; // Example model
 
 // Test DB connection
