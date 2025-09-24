@@ -8,7 +8,7 @@ import dotenv from "dotenv";
 // Load env BEFORE anything else that might read it
 dotenv.config();
 
-import authRoutes from './routes/authRoutes.js';
+import authRoutes from './routes/authRoutes.js'; 
 import eventRoutes from './routes/eventRoutes.js';
 import reviewRoutes from './routes/reviewRoutes.js';
 import adminRoutes from './routes/adminRoutes.js';
@@ -16,21 +16,17 @@ import rsvpRoutes from './routes/rsvpRoutes.js';
 
 import swaggerUi from 'swagger-ui-express';
 import swaggerSpecs from './swagger.js';
-app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpecs));
 import express from "express";
 import cors from "cors";
 
-import authRoutes from "./routes/authRoutes.js";
-import eventRoutes from "./routes/eventRoutes.js";
-import reviewRoutes from "./routes/reviewRoutes.js";
-import adminRoutes from "./routes/adminRoutes.js";
-
-import sequelize from "./config/config.cjs";
+// import sequelize from "./config/config.cjs";
 import User from "./models/User.js"; // Example model
 import sequelize from "./config/db.js";        // your Sequelize instance
 import { getSqlPool, sql } from "./db/sql.js"; // mssql pool + types (for diag route)
 
 const app = express();
+
+app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpecs));
 
 // CORS + JSON
 app.use(
@@ -137,3 +133,4 @@ async function start() {
 }
 
 start();
+

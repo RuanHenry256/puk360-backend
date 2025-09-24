@@ -11,7 +11,7 @@ import {
   deleteEvent,
   updateEventStatus,
 } from '../controllers/eventController.js';
-import { authenticateToken } from '../middleware/auth.js';
+import { requireAuth } from '../middleware/auth.js';
 import { validateEvent, validateEventStatus } from '../middleware/validation.js';
 
 const router = Router();
@@ -152,7 +152,7 @@ router.get('/:id', getEvent);
  *       401:
  *         description: Unauthorized
  */
-router.post('/', authenticateToken, validateEvent, createEvent);
+router.post('/', requireAuth, validateEvent, createEvent);
 
 /**
  * @swagger
@@ -195,7 +195,7 @@ router.post('/', authenticateToken, validateEvent, createEvent);
  *       404:
  *         description: Event not found
  */
-router.patch('/:id', authenticateToken, validateEvent, updateEvent);
+router.patch('/:id', requireAuth, validateEvent, updateEvent);
 
 /**
  * @swagger
@@ -242,7 +242,7 @@ router.patch('/:id', authenticateToken, validateEvent, updateEvent);
  *       404:
  *         description: Event not found
  */
-router.patch('/:id/status', authenticateToken, validateEventStatus, updateEventStatus);
+router.patch('/:id/status', requireAuth, validateEventStatus, updateEventStatus);
 
 /**
  * @swagger
@@ -266,6 +266,6 @@ router.patch('/:id/status', authenticateToken, validateEventStatus, updateEventS
  *       404:
  *         description: Event not found
  */
-router.delete('/:id', authenticateToken, deleteEvent);
+router.delete('/:id', requireAuth, deleteEvent);
 
 export default router;

@@ -5,20 +5,11 @@
  */
 import { Sequelize } from "sequelize";
 import dotenv from "dotenv";
-import sequelize from './src/config/db.js';
 
 dotenv.config();
 
-(async () => {
-  try {
-    await sequelize.authenticate();
-    console.log('Database connection successful');
-  } catch (error) {
-    console.error('Database connection failed:', error);
-  } finally {
-    await sequelize.close();
-  }
-})();
+const dialect = process.env.DB_DIALECT || 'mssql';
+const port = process.env.DB_PORT ? Number(process.env.DB_PORT) : undefined;
 
 const sequelize = new Sequelize(
   process.env.DB_NAME,
@@ -26,14 +17,11 @@ const sequelize = new Sequelize(
   process.env.DB_PASS,
   {
     host: process.env.DB_HOST,
-    dialect: process.env.DB_DIALECT, // 'mssql' or 'postgres'
-    port: process.env.DB_PORT,
-    dialectOptions: {
-      options: {
-        encrypt: true, // required for Azure SQL
-        trustServerCertificate: false
-      }
-    },
+    port,
+    dialect,
+    dialectOptions: dialect === 'mssql'
+      ? { options: { encrypt: true, trustServerCertificate: false } }
+      : {},
     logging: false,
   }
 );

@@ -3,7 +3,7 @@
  * Defines a basic User schema for use with Sequelize-based features.
  */
 import { DataTypes } from "sequelize";
-import sequelize from "../config/config.cjs";
+import sequelize from "../config/db.js";
 
 const User = sequelize.define("User", {
   id: { type: DataTypes.INTEGER, autoIncrement: true, primaryKey: true },
