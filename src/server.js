@@ -6,6 +6,7 @@ import authRoutes from './routes/authRoutes.js';
 import eventRoutes from './routes/eventRoutes.js';
 import reviewRoutes from './routes/reviewRoutes.js';
 import adminRoutes from './routes/adminRoutes.js';
+import rsvpRoutes from './routes/rsvpRoutes.js';
 
 import swaggerUi from 'swagger-ui-express';
 import swaggerSpecs from './swagger.js';
