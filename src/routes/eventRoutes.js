@@ -1,3 +1,7 @@
+/**
+ * Event routes.
+ * Exposes CRUD endpoints for events via the event controller.
+ */
 import { Router } from 'express';
 import {
   getAllEvents,
