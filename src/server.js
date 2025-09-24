@@ -8,7 +8,6 @@ import dotenv from "dotenv";
 // Load env BEFORE anything else that might read it
 dotenv.config();
 
-<<<<<<< HEAD
 import authRoutes from './routes/authRoutes.js';
 import eventRoutes from './routes/eventRoutes.js';
 import reviewRoutes from './routes/reviewRoutes.js';
@@ -18,23 +17,18 @@ import rsvpRoutes from './routes/rsvpRoutes.js';
 import swaggerUi from 'swagger-ui-express';
 import swaggerSpecs from './swagger.js';
 app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpecs));
-=======
 import express from "express";
 import cors from "cors";
->>>>>>> ca054b5 (Added LoginScreen functionality that uses the database connection to compare user input and to validate credentials. Added updates to controllers, routes, middleware and docs)
 
 import authRoutes from "./routes/authRoutes.js";
 import eventRoutes from "./routes/eventRoutes.js";
 import reviewRoutes from "./routes/reviewRoutes.js";
 import adminRoutes from "./routes/adminRoutes.js";
 
-<<<<<<< HEAD
 import sequelize from "./config/config.cjs";
 import User from "./models/User.js"; // Example model
-=======
 import sequelize from "./config/db.js";        // your Sequelize instance
 import { getSqlPool, sql } from "./db/sql.js"; // mssql pool + types (for diag route)
->>>>>>> ca054b5 (Added LoginScreen functionality that uses the database connection to compare user input and to validate credentials. Added updates to controllers, routes, middleware and docs)
 
 const app = express();
 

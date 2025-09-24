@@ -1,8 +1,3 @@
-<<<<<<< HEAD
-import { Sequelize } from 'sequelize';
-import dotenv from 'dotenv';
-import sequelize from './src/config/db.js';
-=======
 /**
  * Sequelize DB configuration and instance.
  * Creates and exports a Sequelize connection using environment variables
@@ -10,7 +5,7 @@ import sequelize from './src/config/db.js';
  */
 import { Sequelize } from "sequelize";
 import dotenv from "dotenv";
->>>>>>> ca054b5 (Added LoginScreen functionality that uses the database connection to compare user input and to validate credentials. Added updates to controllers, routes, middleware and docs)
+import sequelize from './src/config/db.js';
 
 dotenv.config();
 
