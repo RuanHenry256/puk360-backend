@@ -4,6 +4,7 @@
  * Loads env, configures CORS/JSON, registers routes, includes health/diag
  * endpoints, authenticates Sequelize, and starts the HTTP server.
  */
+
 import dotenv from "dotenv";
 // Load env BEFORE anything else that might read it
 dotenv.config();
