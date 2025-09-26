@@ -38,7 +38,9 @@ const Review = sequelize.define("Review", {
     allowNull: true
   }
 }, {
-  timestamps: true
+  timestamps: false,
+  freezeTableName: true,
+  tableName: "Review"
 });
 
 export default Review;

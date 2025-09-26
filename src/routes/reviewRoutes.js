@@ -10,8 +10,8 @@ import {
 } from '../controllers/reviewController.js';
 
 const router = Router();
-router.post('/', addReview);
-router.get('/', getReviews);
-router.delete('/', deleteReview);
+router.post('/postreview', addReview);
+router.get('/:id/review', getReviews);
+router.delete('/:id', deleteReview);
 
 export default router;

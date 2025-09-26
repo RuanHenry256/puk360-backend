@@ -3,22 +3,30 @@
  * Stubs for adding, listing, and deleting reviews for events.
  */
 import Review from "../models/review.js";
+import Event from "../models/event.js";
 
 // Submit a new review
 export const addReview = async (req, res) => {
   try {
-    const { reviewerId,eventId, userId, rating, comment } = req.body;
+    const { reviewerId, userId,eventId, rating, comment } = req.body;
 
     // Validate input
-    if (!reviewerId||!eventId || !userId || !rating) {
+    if (!reviewerId|| !userId ||!eventId || !rating) {
       return res.status(400).json({ error: "eventId, userId and rating are required" });
     }
-
+    
+        /**if event doesnt exist in our table
+     const event = await Event.findByPk(eventId);
+    if (!event) {
+      return res.status(400).json({ error: "Invalid eventId" });
+    }
+      **/
+     
     // Create review in DB
     const newReview = await Review.create({
       reviewerId,
-      eventId,
       userId,
+      eventId,
       rating,
       comment
     });
@@ -58,4 +66,6 @@ export const deleteReview = async (req, res) => {
     console.error("Error deleting review:", error);
     res.status(500).json({ error: "Failed to delete review" });
   }
+
+
 };
