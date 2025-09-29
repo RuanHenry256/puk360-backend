@@ -1,3 +1,7 @@
+/**
+ * Admin controller.
+ * Stubs for reviewing events/hosts and returning simple analytics.
+ */
 export const getPendingEvents = (req, res) => {
   res.json([{ id: 1, title: "Pending Event", status: "pending" }]);
 };
