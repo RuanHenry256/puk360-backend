@@ -11,6 +11,7 @@ import rsvpRoutes from './routes/rsvpRoutes.js';
 
 import sequelize from "./config/db.js";
 import User from "./models/User.js"; // Example model
+import Event_Attendees from './models/EventAttendees.js';
 
 // Test DB connection
 (async () => {

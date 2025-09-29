@@ -1,50 +1,53 @@
 import { Sequelize } from "sequelize";
 import Event_Attendees from "../models/EventAttendees.js";
-//import Event from "..models/Event.js";
 import User from "../models/User.js";
+import sequelize from "../config/db.js";
 
 // POST: Join 
 export const JoinEvent = async(req, res) => {
-    const eventId = req.params.id;
+    const event_Id = req.params.id;
     const { userId } = req.body;
 
-    try{
-        
-        //check event is approved 
-        const event = await Event.findByPk(eventId);
-        
-        if (!event){
-            return res.status(404).json({ error :"Event not found" });
-        }
-        
-        if (event.Status !== "Scheduled") {
-            return res.status(400).json({ error: "Event not scheduled yet" });
+    try {
+        // Check if user already joined using COUNT
+        const [result] = await sequelize.query(
+            `SELECT COUNT(*) as count FROM Event_Attendees WHERE Event_ID = :event_Id AND User_ID = :userId`,
+            {
+                replacements: { event_Id, userId },
+                type: sequelize.QueryTypes.SELECT,
+            }
+        );
+
+        if (result.count > 0) {
+            return res.status(400).json({ error: "Already joined this event" });
         }
 
-        //Create  RSVP
-        const rsvp = await Event_Attendees.create({
-            Event_ID: eventId,
-            User_ID: userId,
-            RSVP_Status: 'Attending',
-            Timestamp: new Date()
-
-        });
+        // Insert using raw SQL
+        await sequelize.query(
+            `INSERT INTO Event_Attendees (Event_ID, User_ID, RSVP_Status, Timestamp) 
+             VALUES (:event_Id, :userId, 'Attending', GETDATE())`,
+            {
+                replacements: { event_Id, userId },
+            }
+        );
          
         res.status(201).json({ message: "Successfully registered for event" });
 
-    } catch (err){
-        if (err.name === 'SequelizeUniqueConstraintError') {
-            res.status(400).json({ error: "Already joined this event" });
-        } else {
-            res.status(500).json({ error: err.message })
+    } catch (err) {
+        console.error('JoinEvent Error:', err);
+        
+        if (err.original && err.original.number === 547) {
+            return res.status(400).json({ error: "Invalid event or user ID" });
         }
+        
+        return res.status(500).json({ error: "Internal server error" });
     }
 };
 
 //Cancel RSVP API
 export const cancelRSVP = async (req, res) => {
     const eventId = req.params.id;
-    const userId = req.user?.id || req.body.userId;
+    const { userId } = req.body;
 
     try{
         const deleted = await Event_Attendees.destroy({
@@ -68,12 +71,8 @@ export const getAttendees = async (req, res) => {
     try{
         const attendees = await Event_Attendees.findAll({
             where: { Event_ID: eventId},
-            include: [
-                {
-                    model: User,
-                    attributes: ['id', 'name', 'email', 'role'],
-                }
-            ]
+                    attributes: ['User_ID'],
+
         })
 
         if (attendees.length === 0) {
