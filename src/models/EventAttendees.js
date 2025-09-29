@@ -1,5 +1,6 @@
 import { DataTypes } from "sequelize";
 import sequelize from "../config/db.js";
+import User from "./User.js";
 
 const Event_Attendees = sequelize.define("Event_Attendees", {
     Event_ID: { type: DataTypes.INTEGER, primaryKey: true, allowNull: false, references: { model: 'Event', key: 'Event_ID'}},
@@ -9,12 +10,15 @@ const Event_Attendees = sequelize.define("Event_Attendees", {
 }, {
     tableName: 'Event_Attendees', //Explicit table name
     timestamps: false, // Since there is already own Timestamp field
-    Indexes: [
+    indexes: [
         {
             unique: true,
             fields: ['Event_ID', 'User_ID'] // composite primary key
         } 
     ]
 });
+
+
+
 
 export default Event_Attendees;
