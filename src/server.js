@@ -46,6 +46,7 @@ app.use("/api/auth", authRoutes);
 app.use("/api/events", eventRoutes);
 app.use("/api", reviewRoutes); // (as you had it)
 app.use("/api/admin", adminRoutes);
+app.use('/api/events', rsvpRoutes);
 
 // Root route (so "/" doesn't show "Cannot GET /")
 app.get("/", (_req, res) => {
@@ -90,13 +91,6 @@ app.get("/api/diag/auth-check", async (req, res) => {
         WHERE LTRIM(RTRIM(Email)) = LTRIM(RTRIM(@email)) COLLATE SQL_Latin1_General_CP1_CI_AS
       `);
 
-
-// Routes
-app.use('/api/auth', authRoutes);
-app.use('/api/events', eventRoutes);
-app.use('/api', reviewRoutes);  // nested under events
-app.use('/api/admin', adminRoutes);
-app.use('/api/events', rsvpRoutes);
 
     // 3) Does the password match (seed format: NVARCHAR of HASHBYTES)?
     const match = await pool
