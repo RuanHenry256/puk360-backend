@@ -1,11 +1,11 @@
 import { Router } from 'express';
+import { cancelRSVP, getAttendees, JoinEvent } from '../controllers/rsvpController.js';
 
 const router = Router();
 
-// Placeholder routes for RSVP functionality. Update or remove when implementing.
-router.get('/rsvps/health', (_req, res) => {
-  res.json({ status: 'ok' });
-});
+router.post('/:id/join', JoinEvent);//RSVP for event
+router.delete('/:id/join', cancelRSVP);// Cancel RSVP
+router.get('/:id/attendees', getAttendees)// List event attendees
 
 export default router;
 
