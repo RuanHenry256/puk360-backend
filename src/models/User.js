@@ -1,3 +1,7 @@
+/**
+ * Sequelize User model (example).
+ * Defines a basic User schema for use with Sequelize-based features.
+ */
 import { DataTypes } from "sequelize";
 import sequelize from "../config/db.js";
 
