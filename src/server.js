@@ -21,12 +21,16 @@ import cors from "cors";
 
 // import sequelize from "./config/config.cjs";
 import User from "./models/User.js"; // Example model
+
+import Event_Attendees from './models/EventAttendees.js';
+
 import sequelize from "./config/db.js";        // your Sequelize instance
 import { getSqlPool, sql } from "./db/sql.js"; // mssql pool + types (for diag route)
 
 const app = express();
 
 app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpecs));
+
 
 // CORS + JSON
 app.use(
@@ -86,6 +90,14 @@ app.get("/api/diag/auth-check", async (req, res) => {
         WHERE LTRIM(RTRIM(Email)) = LTRIM(RTRIM(@email)) COLLATE SQL_Latin1_General_CP1_CI_AS
       `);
 
+
+// Routes
+app.use('/api/auth', authRoutes);
+app.use('/api/events', eventRoutes);
+app.use('/api', reviewRoutes);  // nested under events
+app.use('/api/admin', adminRoutes);
+app.use('/api/events', rsvpRoutes);
+
     // 3) Does the password match (seed format: NVARCHAR of HASHBYTES)?
     const match = await pool
       .request()
@@ -99,6 +111,7 @@ app.get("/api/diag/auth-check", async (req, res) => {
             AND Password_Hash = CONVERT(NVARCHAR(255), HASHBYTES('SHA2_256', @pw))
         ) THEN 1 ELSE 0 END AS ok
       `);
+
 
     res.json({
       mssql_db: db.recordset[0].dbname,
