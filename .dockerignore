@@ -1,0 +1,27 @@
+# Dependencies
+node_modules
+
+# Debug logs
+npm-debug.log
+yarn-error.log
+
+# Docker
+Dockerfile
+.dockerignore
+
+# Git
+.git
+.gitignore
+
+# Local env files (DON’T send these to the image)
+.env
+.env.local
+
+# IDE settings
+.vscode
+.idea
+
+# Coverage / build output
+coverage
+dist
+build
