@@ -1,5 +1,6 @@
 import { Sequelize } from "sequelize";
 import Event_Attendees from "../models/EventAttendees.js";
+import Event from "../models/Event.js";
 import User from "../models/User.js";
 import sequelize from "../config/db.js";
 
@@ -66,24 +67,51 @@ export const cancelRSVP = async (req, res) => {
 
 //Get all attendees API
 export const getAttendees = async (req, res) => {
-    const eventId = req.params.id;
+  const eventId = req.params.id;
 
-    try{
-        const attendees = await Event_Attendees.findAll({
-            where: { Event_ID: eventId},
-                    attributes: ['User_ID'],
+  try {
+    //Check if the event exists
+    const event = await Event.findOne({
+  where: { id: eventId },
+  attributes: ['id', 'title', 'date', 'location', 'status']
+    });
 
-        })
 
-        if (attendees.length === 0) {
-            return res.status(404).json({ message: "No attendees found for this event"});
-        }
-
-        res.status(200).json(attendees);
-    }catch (err) {
-        res.status(500).json({ error: err.message});
+    if (!event) {
+      return res.status(404).json({ error: "Event not found" });
     }
+
+    //Fetch attendees for that event
+    const attendees = await Event_Attendees.findAll({
+      where: { Event_ID: eventId },
+      attributes: ["User_ID"],
+    });
+
+    //Map to clean array
+    const userIds = attendees.map((a) => a.User_ID);
+
+    //Return event info and attendees (even if empty)
+    res.status(200).json({
+      event: {
+        id: event.id,
+        title: event.title,
+        date: event.date,
+        venue: event.location,
+        status: event.status,
+      },
+      attendees: userIds, 
+      attendeeCount: userIds.length, 
+      message:
+        userIds.length > 0
+          ? "Attendees retrieved successfully"
+          : "No attendees yet for this event",
+    });
+  } catch (err) {
+  res.status(500).json({ error: err.message || "Unknown error occurred" });
+ }
 }
+
+
         
    
     
