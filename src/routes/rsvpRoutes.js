@@ -114,36 +114,43 @@ router.delete('/:id/join', cancelRSVP);
  * @swagger
  * /api/events/{id}/attendees:
  *   get:
- *     summary: Get list of event attendees
- *     description: Retrieve all users registered for a specific event
+ *     summary: Get attendees for a specific event
+ *     description: Returns a list of attendees (with names, emails, and RSVP status) for the specified event.
  *     tags: [RSVP]
  *     parameters:
  *       - in: path
  *         name: id
  *         required: true
+ *         description: ID of the event
  *         schema:
- *           type: string
- *         description: Event ID
+ *           type: integer
  *     responses:
  *       200:
- *         description: List of attendees retrieved successfully
+ *         description: Attendees retrieved successfully
  *         content:
  *           application/json:
- *             schema:
- *               type: array
- *               items:
- *                 $ref: '#/components/schemas/Attendee'
+ *             example:
+ *               event:
+ *                 Event_ID: 1
+ *                 Title: "Welcome Bash"
+ *                 Date: "2025-08-20T10:00:00.000Z"
+ *                 Venue: "Main Campus"
+ *                 Status: "active"
+ *               attendees:
+ *                 - id: 2
+ *                   name: "Jane Doe"
+ *                   email: "jane@nwu.ac.za"
+ *                   RSVP_Status: "Attending"
+ *                 - id: 3
+ *                   name: "John Smith"
+ *                   email: "john@nwu.ac.za"
+ *                   RSVP_Status: "Attending"
+ *               attendeeCount: 2
+ *               message: "Attendees retrieved successfully"
  *       404:
- *         description: No attendees found for this event
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 message:
- *                   type: string
+ *         description: Event or attendees not found
  *       500:
- *         description: Internal server error
+ *         description: Server error
  */
 router.get('/:id/attendees', getAttendees);
 
