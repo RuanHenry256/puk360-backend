@@ -79,3 +79,44 @@ export async function getUserRoles(userId) {
     `);
   return result.recordset.map(r => r.Role_Name);
 }
+/**
+ * Update a user's profile fields.
+ * Validates email uniqueness and returns the updated basic user row.
+ */
+export async function updateUserProfile({ userId, name, email }) {
+  const pool = await getSqlPool();
+
+  // Ensure no other user already uses the requested email
+  const duplicate = await pool.request()
+    .input("email", sql.NVarChar(100), email)
+    .input("userId", sql.Int, userId)
+    .query(`
+      SELECT User_ID
+      FROM [User]
+      WHERE LTRIM(RTRIM(Email)) = LTRIM(RTRIM(@email)) COLLATE SQL_Latin1_General_CP1_CI_AS
+        AND User_ID <> @userId
+    `);
+
+  if (duplicate.recordset.length > 0) {
+    const error = new Error('Email already in use by another account.');
+    error.code = 'EMAIL_IN_USE';
+    throw error;
+  }
+
+  const result = await pool.request()
+    .input("name", sql.NVarChar(100), name)
+    .input("email", sql.NVarChar(100), email)
+    .input("userId", sql.Int, userId)
+    .query(`
+      UPDATE [User]
+      SET Name = @name,
+          Email = @email
+      WHERE User_ID = @userId;
+
+      SELECT User_ID, Name, Email
+      FROM [User]
+      WHERE User_ID = @userId;
+    `);
+
+  return result.recordset[0] || null;
+}
