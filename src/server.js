@@ -13,6 +13,8 @@ import eventRoutes from './routes/eventRoutes.js';
 import reviewRoutes from './routes/reviewRoutes.js';
 import adminRoutes from './routes/adminRoutes.js';
 import rsvpRoutes from './routes/rsvpRoutes.js';
+import userRoutes from './routes/userRoutes.js';
+import eventRequestRoutes from './routes/eventRequestRoutes.js';
 
 import swaggerUi from 'swagger-ui-express';
 import swaggerSpecs from './swagger.js';
@@ -46,7 +48,9 @@ app.use("/api/auth", authRoutes);
 app.use("/api/events", eventRoutes);
 app.use("/api", reviewRoutes); // (as you had it)
 app.use("/api/admin", adminRoutes);
+app.use("/api/users", userRoutes);
 app.use('/api/events', rsvpRoutes);
+app.use('/api/host-applications', eventRequestRoutes);
 
 // Root route (so "/" doesn't show "Cannot GET /")
 app.get("/", (_req, res) => {
@@ -140,4 +144,5 @@ async function start() {
 }
 
 start();
+
 
