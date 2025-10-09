@@ -1,4 +1,4 @@
-import { Router } from 'express';
+import express from 'express';
 import {
   getAllEvents,
   getEvent,
@@ -10,9 +10,8 @@ import {
 import { authenticateToken } from '../middleware/auth.js';
 import { validateEvent, validateEventStatus } from '../middleware/validation.js';
 
-const router = Router();
+const router = express.Router();
 
-//Note still to be completed
 /**
  * @swagger
  * components:
@@ -27,6 +26,7 @@ const router = Router();
  *       properties:
  *         id:
  *           type: integer
+ *           description: Unique event ID from the database
  *         title:
  *           type: string
  *         description:
@@ -44,6 +44,9 @@ const router = Router();
  *           format: date-time
  *     EventInput:
  *       type: object
+ *       required:
+ *         - title
+ *         - date
  *       properties:
  *         title:
  *           type: string
@@ -71,14 +74,9 @@ const router = Router();
  *         content:
  *           application/json:
  *             schema:
- *               type: object
- *               properties:
- *                 status:
- *                   type: string
- *                 data:
- *                   type: array
- *                   items:
- *                     $ref: '#/components/schemas/Event'
+ *               type: array
+ *               items:
+ *                 $ref: '#/components/schemas/Event'
  *       500:
  *         description: Server error
  */
@@ -96,18 +94,10 @@ router.get('/', getAllEvents);
  *         required: true
  *         schema:
  *           type: integer
+ *           description: Event ID
  *     responses:
  *       200:
  *         description: Event details
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 status:
- *                   type: string
- *                 data:
- *                   $ref: '#/components/schemas/Event'
  *       404:
  *         description: Event not found
  *       500:
@@ -132,17 +122,6 @@ router.get('/:id', getEvent);
  *     responses:
  *       201:
  *         description: Event created
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 status:
- *                   type: string
- *                 message:
- *                   type: string
- *                 data:
- *                   $ref: '#/components/schemas/Event'
  *       400:
  *         description: Invalid input
  *       401:
@@ -173,17 +152,6 @@ router.post('/', authenticateToken, validateEvent, createEvent);
  *     responses:
  *       200:
  *         description: Event updated
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 status:
- *                   type: string
- *                 message:
- *                   type: string
- *                 data:
- *                   $ref: '#/components/schemas/Event'
  *       400:
  *         description: Invalid input
  *       401:
@@ -213,6 +181,8 @@ router.patch('/:id', authenticateToken, validateEvent, updateEvent);
  *         application/json:
  *           schema:
  *             type: object
+ *             required:
+ *               - status
  *             properties:
  *               status:
  *                 type: string
@@ -220,17 +190,6 @@ router.patch('/:id', authenticateToken, validateEvent, updateEvent);
  *     responses:
  *       200:
  *         description: Event status updated
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 status:
- *                   type: string
- *                 message:
- *                   type: string
- *                 data:
- *                   $ref: '#/components/schemas/Event'
  *       400:
  *         description: Invalid status
  *       401:
