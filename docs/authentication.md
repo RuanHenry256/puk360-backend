@@ -1,6 +1,8 @@
 # Authentication Overview
 
-This document describes the authentication features added to the backend: user registration, login, password hashing, and diagnostics.
+This doc focuses on backend authentication: endpoints, JWT issuance and middleware, password hashing/seed compatibility, and diagnostics.
+
+For a front-to-back walkthrough (UI + API), see `puk360-backend/docs/LOGIN.md`.
 
 ---
 
@@ -14,74 +16,81 @@ This document describes the authentication features added to the backend: user r
   - Body: `{ "email": string, "password": string }`
   - Response: `{ token, user: { id, name, email, roles } }`
 
-Both endpoints return a signed JWT in `token`, which the frontend can store and attach as `Authorization: Bearer <token>`.
+Both endpoints return a signed JWT in `token`. Clients should send `Authorization: Bearer <token>` to access protected routes.
 
 ---
 
 ## Implementation
 
-- Controller: `puk360-backend/src/controllers/authController.js:14`
-  - Registers users by delegating to the repository to hash-and-insert, then issues a JWT.
-  - Logs in users by verifying email+password, fetching roles, and issuing a JWT.
+- Controller: `puk360-backend/src/controllers/authController.js`
+  - Validates inputs, creates or verifies users via repo, fetches roles, signs a JWT (`expiresIn: "1h"`).
 
-- Repository: `puk360-backend/src/data/userRepo.js:24`
-  - `verifyUserByEmailPassword(email, pw)` performs SQL-side hashing and compares against the stored `Password_Hash`.
-  - To support existing seeded users and new registrations, verification checks two forms of hashing input:
+- Repository: `puk360-backend/src/data/userRepo.js`
+  - `verifyUserByEmailPassword(email, pw)` uses SQL-side hashing compatible with both seeded and newly registered users:
     - `CONVERT(NVARCHAR(255), HASHBYTES('SHA2_256', @pw))`
     - `CONVERT(NVARCHAR(255), HASHBYTES('SHA2_256', CAST(@pw AS VARCHAR(400))))`
-  - `createUserWithSqlHash(...)` hashes the password in SQL with `CONVERT(NVARCHAR(255), HASHBYTES('SHA2_256', @pw))` and inserts the user.
-  - `getUserRoles(userId)` returns an array of role names by joining `UserRoles` and `Roles`.
+  - `createUserWithSqlHash(...)` inserts using `CONVERT(NVARCHAR(255), HASHBYTES('SHA2_256', @pw))`.
+  - `getUserRoles(userId)` returns an array of role names.
+  - `updateUserProfile({ userId, name, email })` ensures email uniqueness and updates basic profile fields.
 
-- Routes: `puk360-backend/src/routes/authRoutes.js:1`
+- Routes: `puk360-backend/src/routes/authRoutes.js`
   - Exposes `POST /api/auth/register` and `POST /api/auth/login`.
+
+---
+
+## JWT and Middleware
+
+- Middleware: `puk360-backend/src/middleware/auth.js`
+  - `requireAuth` expects `Authorization: Bearer <jwt>` and attaches the decoded claims to `req.user`.
+- Protected endpoints
+  - Events create/update/delete/status use `requireAuth` (see `src/routes/eventRoutes.js`).
+  - RSVP routes currently do not enforce auth; consider adding `requireAuth` and deriving `userId` from `req.user.id` instead of trusting body input.
 
 ---
 
 ## Password Hashing and Seed Compatibility
 
-The database schema has `Password_Hash NVARCHAR(255)`. Your seed populated users like:
+The `Password_Hash` column is `NVARCHAR(255)`. Seeded users were inserted with `HASHBYTES('SHA2_256', CONCAT('Password', @i))`, which led to NVARCHAR storage of raw hash bytes. To handle both historical and new users, verification compares against two forms:
 
-```sql
-INSERT INTO [User] (Name, Email, Password_Hash, Status)
-VALUES (..., HASHBYTES('SHA2_256', CONCAT('Password', @i)), ...);
-```
+- Newly registered: `CONVERT(NVARCHAR(255), HASHBYTES('SHA2_256', @pw))`
+- Seed-compatible: `CONVERT(NVARCHAR(255), HASHBYTES('SHA2_256', CAST(@pw AS VARCHAR(400))))`
 
-That means raw bytes from `HASHBYTES` were implicitly stored in `NVARCHAR(255)`. At runtime we now compare using SQL so that both seeded and newly registered users authenticate correctly:
+Hardening recommendations:
 
-- Newly registered users: `CONVERT(NVARCHAR(255), HASHBYTES('SHA2_256', @pw))`
-- Seeded users: `CONVERT(NVARCHAR(255), HASHBYTES('SHA2_256', CAST(@pw AS VARCHAR(400))))`
-
-This dual-compare fixes the mismatch between hashing VARBINARY derived from `NVARCHAR` vs `VARCHAR` inputs.
-
-Recommendation for future hardening:
-
-- Normalize storage to one canonical format:
-  - Store raw bytes in `VARBINARY(32)` and compare to `HASHBYTES(...)`, or
-  - Store hex via `CONVERT(VARCHAR(64), HASHBYTES(...), 2)` and compare to the same.
-- Add a migration to convert existing `Password_Hash` values, then simplify verification to a single comparison.
+- Normalize to a canonical format (e.g., store raw bytes in `VARBINARY(32)` or hex via `CONVERT(VARCHAR(64), HASHBYTES(...), 2)`).
+- Migrate existing values to the chosen format, then simplify verification to a single comparison.
 
 ---
 
-## Diagnostics
+## Diagnostics (Temporary)
 
-A temporary diagnostic route helps validate DB connectivity and hashing behavior:
+Diagnostic route to confirm DB connectivity and hashing behavior:
 
 - `GET /api/diag/auth-check?email=user24@example.com&pw=Password24`
-- Location: `puk360-backend/src/server.js:57`
-- Response includes the DB name, whether the email exists, and whether the password matches using the NVARCHAR comparison.
+- Location: `puk360-backend/src/server.js`
+- Response shows DB name, whether the email exists, and whether the password matches.
 
-Remove this route once verification is complete.
+Remove this endpoint in production.
 
 ---
 
 ## Environment Variables
 
-Configure database and auth secrets either via a single `AZURE_SQL_CONNECTION_STRING` or discrete vars. See `puk360-backend/env.example`.
+Configure database and auth secrets in `.env` (see `puk360-backend/env.example`).
 
 - Required
-  - `DB_HOST`, `DB_USER`, `DB_PASS`, `DB_NAME`, `DB_PORT` (optional) or `AZURE_SQL_CONNECTION_STRING`
-  - `JWT_SECRET` (for signing tokens)
+  - `AZURE_SQL_CONNECTION_STRING` or (`DB_HOST`, `DB_USER`, `DB_PASS`, `DB_NAME`, `DB_PORT`)
+  - `JWT_SECRET`
 
 - Optional
-  - `CORS_ORIGIN` (defaults to `http://localhost:3000`)
+  - `CORS_ORIGIN` (default `http://localhost:3000`)
+  - `SKIP_DB` set to `1` to start the server without DB (dev only)
+
+---
+
+## Related Docs
+
+- Frontend login flow: `puk360-backend/docs/LOGIN.md`
+- API reference (live): `http://localhost:5000/api-docs` (Swagger UI)
+- Swagger setup: `puk360-backend/docs/API_SWAGGER.md`
 
