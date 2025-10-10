@@ -16,8 +16,10 @@ import rsvpRoutes from './routes/rsvpRoutes.js';
 import userRoutes from './routes/userRoutes.js';
 import eventRequestRoutes from './routes/eventRequestRoutes.js';
 
+// Swagger is configured via swaggerSpecs and mounted below
+
 import swaggerUi from 'swagger-ui-express';
-import swaggerSpecs from './swagger.js';
+import swaggerSpecs from './config/swagger.js';
 import express from "express";
 import cors from "cors";
 
@@ -126,17 +128,26 @@ app.get("/api/diag/auth-check", async (req, res) => {
 const PORT = process.env.PORT || 5000;
 
 async function start() {
+  const listen = () =>
+    app.listen(PORT, () => {
+      console.log(`Server running on port ${PORT}`);
+      console.log(`Docs:   http://localhost:${PORT}/api-docs`);
+      console.log(`Health: http://localhost:${PORT}/api/health`);
+      console.log(`Diag:   http://localhost:${PORT}/api/diag/auth-check`);
+    });
+
+  // Allow running without DB for docs/local testing
+  if (process.env.SKIP_DB === '1' || process.env.SKIP_DB === 'true') {
+    console.warn('⚠️  SKIP_DB is enabled. Starting server without DB connection...');
+    return listen();
+  }
+
   try {
     await sequelize.authenticate();
     console.log("✅ Connected to Azure Database");
     await sequelize.sync(); // sync models (no destructive alters)
     console.log("✅ Database synced");
-
-    app.listen(PORT, () => {
-      console.log(`Server running on port ${PORT}`);
-      console.log(`Health: http://localhost:${PORT}/api/health`);
-      console.log(`Diag:   http://localhost:${PORT}/api/diag/auth-check`);
-    });
+    listen();
   } catch (error) {
     console.error("❌ Database connection failed:", error.message || error);
     process.exit(1); // fail fast if DB is down

@@ -1,0 +1,52 @@
+# Node/Express backend .gitignore
+
+# Logs
+logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+# Runtime data
+pids
+*.pid
+*.seed
+*.pid.lock
+
+# Coverage
+coverage
+*.lcov
+.nyc_output
+
+# Build output / compiled files
+dist
+build
+lib
+.cache
+*.tsbuildinfo
+
+# Dependency directories
+node_modules/
+.npm
+
+# Environment variables
+.env
+.env.*
+!.env.example
+
+# Temporary files
+tmp/
+temp/
+
+# Database/local data (adjust as needed)
+*.sqlite
+*.sqlite3
+data/
+
+# OS/Editor files
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+
