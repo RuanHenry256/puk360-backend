@@ -1,11 +1,28 @@
 import Event from '../models/Event.js';
+import { Op } from 'sequelize';
 
 // Get all events
 export const getAllEvents = async (req, res) => {
   try {
     const events = await Event.findAll({
-      attributes: ['id', 'title', 'description', 'date', 'location', 'status', 'createdAt'],
+      attributes: [
+        'Event_ID', 
+        'Title', 
+        'Description', 
+        'Date', 
+        'Time',
+        'endTime',
+        'Status',
+        'type',
+        'category',
+        'hostedBy',
+        'venue',
+        'campus',
+        'Venue_ID'
+      ],
+     
     });
+    
     res.status(200).json({
       status: 'success',
       data: events,
@@ -23,14 +40,31 @@ export const getAllEvents = async (req, res) => {
 export const getEvent = async (req, res) => {
   try {
     const event = await Event.findByPk(req.params.id, {
-      attributes: ['id', 'title', 'description', 'date', 'location', 'status', 'createdAt'],
+      attributes: [
+        'Event_ID', 
+        'Title', 
+        'Description', 
+        'Date', 
+        'Time',
+        'endTime',
+        'Status',
+        'type',
+        'category',
+        'hostedBy',
+        'venue',
+        'campus',
+        'Venue_ID',
+        'Host_User_ID'
+      ],
     });
+    
     if (!event) {
       return res.status(404).json({
         status: 'error',
         error: 'Event not found',
       });
     }
+    
     res.status(200).json({
       status: 'success',
       data: event,
@@ -47,14 +81,38 @@ export const getEvent = async (req, res) => {
 // Create a new event
 export const createEvent = async (req, res) => {
   try {
-    const { title, description, date, location, status } = req.body;
+    const { 
+      Title, 
+      Description, 
+      Date, 
+      Time,
+      Host_User_ID, 
+      Venue_ID, 
+      Status,
+      type,
+      category,
+      hostedBy,
+      endTime,
+      venue,
+      campus
+    } = req.body;
+    
     const event = await Event.create({
-      title,
-      description,
-      date,
-      location,
-      status: status || 'active',
+      Title,
+      Description,
+      Date,
+      Time,
+      Host_User_ID,
+      Venue_ID,
+      Status: Status || 'Scheduled',
+      type: type || 'General Event',
+      category: category || 'Entertainment',
+      hostedBy: hostedBy || 'NWU Events',
+      endTime,
+      venue,
+      campus: campus || 'Main Campus'
     });
+    
     res.status(201).json({
       status: 'success',
       message: 'Event created',
@@ -79,8 +137,39 @@ export const updateEvent = async (req, res) => {
         error: 'Event not found',
       });
     }
-    const { title, description, date, location, status } = req.body;
-    await event.update({ title, description, date, location, status });
+    
+    const { 
+      Title, 
+      Description, 
+      Date, 
+      Time,
+      Host_User_ID, 
+      Venue_ID, 
+      Status,
+      type,
+      category,
+      hostedBy,
+      endTime,
+      venue,
+      campus
+    } = req.body;
+    
+    await event.update({ 
+      Title, 
+      Description, 
+      Date, 
+      Time,
+      Host_User_ID, 
+      Venue_ID, 
+      Status,
+      type,
+      category,
+      hostedBy,
+      endTime,
+      venue,
+      campus
+    });
+    
     res.status(200).json({
       status: 'success',
       message: 'Event updated',
@@ -105,8 +194,8 @@ export const updateEventStatus = async (req, res) => {
         error: 'Event not found',
       });
     }
-    const { status } = req.body;
-    await event.update({ status });
+    const { Status } = req.body;
+    await event.update({ Status });
     res.status(200).json({
       status: 'success',
       message: 'Event status updated',

@@ -8,7 +8,7 @@ const sequelize = new Sequelize(
   config.development.password,
   {
     host: config.development.host,
-    dialect: config.development.dialect,
+    dialect: 'mssql',
     port: config.development.port,
     dialectOptions: config.development.dialectOptions,
     logging: config.development.logging,
@@ -19,42 +19,84 @@ class Event extends Model {}
 
 Event.init(
   {
-    id: {
+    Event_ID: {
       type: DataTypes.INTEGER,
       primaryKey: true,
       autoIncrement: true,
+      field: 'Event_ID'
     },
-    title: {
+    Title: {
       type: DataTypes.STRING,
       allowNull: false,
+      field: 'Title'
     },
-    description: {
+    Description: {
       type: DataTypes.TEXT,
       allowNull: true,
+      field: 'Description'
     },
-    date: {
+    Date: {
       type: DataTypes.DATE,
       allowNull: false,
+      field: 'Date'
     },
-    location: {
+    Time: {
+      type: DataTypes.TIME,
+      allowNull: false,
+      field: 'Time'
+    },
+    Host_User_ID: {
+      type: DataTypes.INTEGER,
+      allowNull: false,
+      field: 'Host_User_ID'
+    },
+    Venue_ID: {
+      type: DataTypes.INTEGER,
+      allowNull: false,
+      field: 'Venue_ID'
+    },
+    Status: {
       type: DataTypes.STRING,
       allowNull: false,
+      field: 'Status'
     },
-    status: {
-      type: DataTypes.ENUM('active', 'cancelled', 'completed'),
+    // New fields
+    type: {
+      type: DataTypes.STRING,
       allowNull: false,
-      defaultValue: 'active',
+      defaultValue: 'General Event'
     },
+    category: {
+      type: DataTypes.STRING,
+      allowNull: false,
+      defaultValue: 'Entertainment'
+    },
+    hostedBy: {
+      type: DataTypes.STRING,
+      allowNull: false,
+      defaultValue: 'NWU Events'
+    },
+    endTime: {
+      type: DataTypes.TIME,
+      allowNull: true,
+    },
+    venue: {
+      type: DataTypes.STRING,
+      allowNull: true,
+    },
+    campus: {
+      type: DataTypes.ENUM('Potchefstroom', 'Mahikeng', 'Vaal'),
+      allowNull: false,
+      defaultValue: 'Main Campus'
+    }
   },
   {
     sequelize,
     modelName: 'Event',
-    tableName: 'events',
-    timestamps: true,
+    tableName: 'Event',
+    timestamps: false,
   }
 );
 
 export default Event;
-
-// For CommonJS compatibility (e.g., seed-event.cjs)
 export const EventModel = Event;
