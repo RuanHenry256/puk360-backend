@@ -46,14 +46,17 @@ export async function verifyUserByEmailPassword(email, plainPassword) {
 }
 
 /** Insert a new user hashing the password IN SQL (same approach as seed script) */
-export async function createUserWithSqlHash({ name, email, plainPassword, status = "Active" }) {
+export async function createUserWithSqlHash({ name, email, plainPassword, status = "Active", defaultRoleId = 1 }) {
   const pool = await getSqlPool();
   const result = await pool.request()
     .input("name", sql.NVarChar(100), name)
     .input("email", sql.NVarChar(100), email)
     .input("pw", sql.NVarChar(400), plainPassword)
     .input("status", sql.NVarChar(50), status)
+    .input("roleId", sql.Int, defaultRoleId)
     .query(`
+      DECLARE @newUserId INT;
+
       INSERT INTO [User] (Name, Email, Password_Hash, Status)
       VALUES (
         @name,
@@ -61,9 +64,39 @@ export async function createUserWithSqlHash({ name, email, plainPassword, status
         CONVERT(NVARCHAR(255), HASHBYTES('SHA2_256', @pw)),
         @status
       );
-      SELECT SCOPE_IDENTITY() AS User_ID;
+
+      SET @newUserId = CAST(SCOPE_IDENTITY() AS INT);
+
+      -- Ensure default role mapping exists for the new user
+      IF @newUserId IS NOT NULL AND NOT EXISTS (
+        SELECT 1 FROM UserRoles WHERE User_ID = @newUserId AND Role_ID = @roleId
+      )
+      BEGIN
+        INSERT INTO UserRoles (User_ID, Role_ID) VALUES (@newUserId, @roleId);
+      END
+
+      SELECT @newUserId AS User_ID;
     `);
   return result.recordset[0]?.User_ID;
+}
+
+/**
+ * Ensure a user has a mapping to a given role in UserRoles.
+ * Safe to call repeatedly; it inserts only if not already present.
+ */
+export async function ensureUserRole(userId, roleId) {
+  const pool = await getSqlPool();
+  await pool.request()
+    .input("userId", sql.Int, userId)
+    .input("roleId", sql.Int, roleId)
+    .query(`
+      IF NOT EXISTS (
+        SELECT 1 FROM UserRoles WHERE User_ID = @userId AND Role_ID = @roleId
+      )
+      BEGIN
+        INSERT INTO UserRoles (User_ID, Role_ID) VALUES (@userId, @roleId);
+      END
+    `);
 }
 
 /** Get a user's roles as an array of role names */

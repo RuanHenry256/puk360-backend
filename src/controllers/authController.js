@@ -9,7 +9,8 @@ import {
   verifyUserByEmailPassword,
   createUserWithSqlHash,
   findUserByEmail,
-  getUserRoles
+  getUserRoles,
+  ensureUserRole
 } from "../data/userRepo.js";
 
 /**
@@ -31,6 +32,13 @@ export async function register(req, res) {
       plainPassword: password,
       status: "Active"
     });
+
+    // Assign default "Student" role (Role_ID = 1)
+    try {
+      await ensureUserRole(userId, 1);
+    } catch (e) {
+      console.error("Failed to assign default role to new user", e);
+    }
 
     const roles = await getUserRoles(userId);
     const token = jwt.sign(
