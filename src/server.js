@@ -6,7 +6,6 @@
  */
 
 import dotenv from "dotenv";
-// Load env BEFORE anything else that might read it
 dotenv.config();
 
 import authRoutes from './routes/authRoutes.js'; 
@@ -16,26 +15,16 @@ import adminRoutes from './routes/adminRoutes.js';
 import rsvpRoutes from './routes/rsvpRoutes.js';
 import userRoutes from './routes/userRoutes.js';
 import eventRequestRoutes from './routes/eventRequestRoutes.js';
-
-// Swagger is configured via swaggerSpecs and mounted below
-
 import swaggerUi from 'swagger-ui-express';
 import swaggerSpecs from './config/swagger.js';
 import express from "express";
 import cors from "cors";
-
-// import sequelize from "./config/config.cjs";
-import User from "./models/User.js"; // Example model
-
-import Event_Attendees from './models/EventAttendees.js';
-
-import sequelize from "./config/db.js";        // your Sequelize instance
-import { getSqlPool, sql } from "./db/sql.js"; // mssql pool + types (for diag route)
+import sequelize from "./config/db.js"; // Your Sequelize instance
+import { getSqlPool, sql } from "./db/sql.js"; // mssql pool + types
 
 const app = express();
 
 app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpecs));
-
 
 // CORS + JSON
 app.use(
@@ -49,18 +38,38 @@ app.use(express.json());
 // --- Routes ---
 app.use("/api/auth", authRoutes);
 app.use("/api/events", eventRoutes);
-app.use("/api", reviewRoutes); // (as you had it)
+app.use("/api", reviewRoutes);
 app.use("/api/admin", adminRoutes);
 app.use("/api/users", userRoutes);
 app.use('/api/events', rsvpRoutes);
 app.use('/api/host-applications', eventRequestRoutes);
 
-// Root route (so "/" doesn't show "Cannot GET /")
+// Users endpoint to get active users
+app.get("/api/users", async (req, res) => {
+  try {
+    const pool = await getSqlPool();
+    
+    // Query to fetch active users
+    const result = await pool.request().query(`
+      SELECT User_ID, Name, Email 
+      FROM [User] 
+      WHERE Status = 'Active'
+    `);
+
+    // Send the user data as JSON
+    res.json(result.recordset);
+  } catch (error) {
+    console.error('Error fetching users:', error);
+    res.status(500).send('Internal Server Error');
+  }
+});
+
+// Root route
 app.get("/", (_req, res) => {
   res.send("PUK360 API is running 🚀  Try GET /api/health");
 });
 
-// Health route that also checks DB reachability (via Sequelize)
+// Health route
 app.get("/api/health", async (_req, res) => {
   try {
     const [rows] = await sequelize.query("SELECT 1 AS ok;");
@@ -71,13 +80,7 @@ app.get("/api/health", async (_req, res) => {
   }
 });
 
-/**
- * Diagnostic route to confirm the exact DB the mssql pool hits,
- * and whether a given email/password matches using your seed's NVARCHAR hash format.
- * Remove this once you've confirmed things.
- * Example:
- *   GET /api/diag/auth-check?email=user24@example.com&pw=Password24
- */
+// Diagnostic route
 app.get("/api/diag/auth-check", async (req, res) => {
   try {
     const email = req.query.email || "user24@example.com";
@@ -85,10 +88,7 @@ app.get("/api/diag/auth-check", async (req, res) => {
 
     const pool = await getSqlPool();
 
-    // 1) Which DB are we on (from the mssql connection)?
     const db = await pool.request().query("SELECT DB_NAME() AS dbname");
-
-    // 2) Does the email exist (trimmed, case-insensitive)?
     const exists = await pool
       .request()
       .input("email", sql.NVarChar(100), email)
@@ -98,8 +98,6 @@ app.get("/api/diag/auth-check", async (req, res) => {
         WHERE LTRIM(RTRIM(Email)) = LTRIM(RTRIM(@email)) COLLATE SQL_Latin1_General_CP1_CI_AS
       `);
 
-
-    // 3) Does the password match (seed format: NVARCHAR of HASHBYTES)?
     const match = await pool
       .request()
       .input("email", sql.NVarChar(100), email)
@@ -113,7 +111,6 @@ app.get("/api/diag/auth-check", async (req, res) => {
         ) THEN 1 ELSE 0 END AS ok
       `);
 
-
     res.json({
       mssql_db: db.recordset[0].dbname,
       email,
@@ -125,7 +122,7 @@ app.get("/api/diag/auth-check", async (req, res) => {
   }
 });
 
-// --- Start server AFTER DB is confirmed (Sequelize path) ---
+// --- Start server AFTER DB is confirmed ---
 const PORT = process.env.PORT || 5000;
 
 async function start() {
@@ -137,7 +134,6 @@ async function start() {
       console.log(`Diag:   http://localhost:${PORT}/api/diag/auth-check`);
     });
 
-  // Allow running without DB for docs/local testing
   if (process.env.SKIP_DB === '1' || process.env.SKIP_DB === 'true') {
     console.warn('⚠️  SKIP_DB is enabled. Starting server without DB connection...');
     return listen();
@@ -146,15 +142,13 @@ async function start() {
   try {
     await sequelize.authenticate();
     console.log("✅ Connected to Azure Database");
-    await sequelize.sync(); // sync models (no destructive alters)
+    await sequelize.sync(); // sync models
     console.log("✅ Database synced");
     listen();
   } catch (error) {
     console.error("❌ Database connection failed:", error.message || error);
-    process.exit(1); // fail fast if DB is down
+    process.exit(1);
   }
 }
 
 start();
-
-
