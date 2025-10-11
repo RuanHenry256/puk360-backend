@@ -7,6 +7,11 @@
 - Event Details: `EVENT_DETAILS.md`
 - Swagger API Docs: `API_SWAGGER.md`
 
+New/updated docs:
+- Hosts (status guard + analytics): `HOSTS.md`
+- Admin Host Applications: `ADMIN_HOST_APPLICATIONS.md`
+- Database changes summary: `DATABASE_CHANGES.md`
+
 Notes:
 - See `AUTHENTICATION.md` for deeper backend auth details (hashing, diagnostics, middleware).
 - Explore `http://localhost:5000/api-docs` for live API documentation.

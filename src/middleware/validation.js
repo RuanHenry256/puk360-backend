@@ -1,13 +1,26 @@
-import { body, validationResult } from 'express-validator';
+import { body, validationResult, oneOf } from 'express-validator';
 
 export const validateEvent = [
-  body('title').notEmpty().withMessage('Title is required'),
-  body('date').isISO8601().withMessage('Valid date is required'),
-  body('location').notEmpty().withMessage('Location is required'),
-  body('status')
-    .optional()
-    .isIn(['active', 'cancelled', 'completed'])
-    .withMessage('Invalid status'),
+  // Title (support both Title/title)
+  oneOf([
+    body('Title').notEmpty(),
+    body('title').notEmpty(),
+  ], 'Title is required'),
+  // Date (support both Date/date)
+  oneOf([
+    body('Date').isISO8601(),
+    body('date').isISO8601(),
+  ], 'Valid date is required'),
+  // Require either venue text or campus or legacy location
+  oneOf([
+    body('venue').notEmpty(),
+    body('campus').notEmpty(),
+    body('location').notEmpty(),
+  ], 'venue or campus is required'),
+  // Optional campus validation
+  body('campus').optional().isIn(['Potchefstroom','Mahikeng','Vaal']).withMessage('Invalid campus'),
+  // Status optional (controller defaults to Scheduled)
+  body('Status').optional().isString(),
   (req, res, next) => {
     const errors = validationResult(req);
     if (!errors.isEmpty()) {

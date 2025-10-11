@@ -85,9 +85,15 @@ Event.init(
       allowNull: true,
     },
     campus: {
-      type: DataTypes.ENUM('Potchefstroom', 'Mahikeng', 'Vaal'),
+      type: DataTypes.STRING,
       allowNull: false,
-      defaultValue: 'Main Campus'
+      defaultValue: 'Potchefstroom',
+      field: 'campus'
+    },
+    ImageUrl: {
+      type: DataTypes.STRING,
+      allowNull: true,
+      field: 'ImageUrl'
     }
   },
   {

@@ -4,6 +4,7 @@
  * Allows authenticated students to update their own profile information.
  */
 import { findUserByEmail, getUserRoles, updateUserProfile } from "../data/userRepo.js";
+import { getSqlPool, sql } from "../db/sql.js";
 
 export async function updateCurrentUser(req, res) {
   try {
@@ -31,6 +32,13 @@ export async function updateCurrentUser(req, res) {
     }
 
     const roles = await getUserRoles(userId);
+    let hostStatus = null;
+    try {
+      const pool = await getSqlPool();
+      const rs = await pool.request().input('uid', sql.Int, userId)
+        .query(`SELECT TOP 1 Approval_Status, Activity_Status, Is_Active FROM dbo.Host_Profile WHERE User_ID=@uid`);
+      hostStatus = rs.recordset?.[0] || null;
+    } catch {}
 
     return res.json({
       user: {
@@ -38,6 +46,7 @@ export async function updateCurrentUser(req, res) {
         name: updated.Name,
         email: updated.Email,
         roles,
+        hostStatus,
       },
     });
   } catch (error) {

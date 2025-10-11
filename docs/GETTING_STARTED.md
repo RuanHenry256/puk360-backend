@@ -88,3 +88,11 @@ Optional for quick API demos:
 - No-DB mode: During early UI work, set `SKIP_DB=1` before `npm start` in the backend to bypass DB connection.
 - API exploration: Use Swagger at `/api-docs` for request/response shapes and quick testing.
 
+---
+
+## New in this iteration
+
+- Host guard middleware (`requireActiveHost`) restricts event creation/updates/deletes to active hosts (see `src/middleware/hostGuard.js`).
+- Host analytics endpoints under `/api/hosts/:id/...` (stats, top-events, category-mix, rsvp-trend).
+- Admin host applications endpoints under `/api/admin/host-applications` (list + review with decision/comment) that update `Host_Profile` and assign the Host role.
+

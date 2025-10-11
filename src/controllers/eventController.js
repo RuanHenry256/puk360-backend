@@ -1,9 +1,14 @@
 import Event from '../models/Event.js';
+import Venue from '../models/Venue.js';
 import { Op } from 'sequelize';
 
 // Get all events
 export const getAllEvents = async (req, res) => {
   try {
+    const where = {};
+    if (req.query.hostUserId) {
+      where.Host_User_ID = Number(req.query.hostUserId);
+    }
     const events = await Event.findAll({
       attributes: [
         'Event_ID', 
@@ -18,9 +23,10 @@ export const getAllEvents = async (req, res) => {
         'hostedBy',
         'venue',
         'campus',
-        'Venue_ID'
+        'Venue_ID',
+        'ImageUrl'
       ],
-     
+      where,
     });
     
     res.status(200).json({
@@ -54,7 +60,8 @@ export const getEvent = async (req, res) => {
         'venue',
         'campus',
         'Venue_ID',
-        'Host_User_ID'
+        'Host_User_ID',
+        'ImageUrl'
       ],
     });
     
@@ -94,23 +101,37 @@ export const createEvent = async (req, res) => {
       hostedBy,
       endTime,
       venue,
-      campus
+      campus,
+      ImageUrl
     } = req.body;
-    
+    let resolvedVenueId = (Venue_ID !== undefined && Venue_ID !== null && Venue_ID !== '') ? Number(Venue_ID) : undefined;
+    if (!resolvedVenueId && process.env.DEFAULT_VENUE_ID) {
+      resolvedVenueId = Number(process.env.DEFAULT_VENUE_ID);
+    }
+    if (!resolvedVenueId) {
+      const [v] = await Venue.findOrCreate({
+        where: { Name: 'Unspecified' },
+        defaults: { Capacity: null, Location: null },
+      });
+      resolvedVenueId = v.Venue_ID;
+    }
+
+    const cleanImageUrl = (typeof ImageUrl === 'string' && ImageUrl.trim().length) ? ImageUrl.trim() : null;
     const event = await Event.create({
       Title,
       Description,
       Date,
       Time,
       Host_User_ID,
-      Venue_ID,
+      Venue_ID: resolvedVenueId,
       Status: Status || 'Scheduled',
       type: type || 'General Event',
       category: category || 'Entertainment',
       hostedBy: hostedBy || 'NWU Events',
       endTime,
       venue,
-      campus: campus || 'Main Campus'
+      campus: campus || 'Potchefstroom',
+      ImageUrl: cleanImageUrl
     });
     
     res.status(201).json({
@@ -151,7 +172,8 @@ export const updateEvent = async (req, res) => {
       hostedBy,
       endTime,
       venue,
-      campus
+      campus,
+      ImageUrl
     } = req.body;
     
     await event.update({ 
@@ -167,7 +189,8 @@ export const updateEvent = async (req, res) => {
       hostedBy,
       endTime,
       venue,
-      campus
+      campus,
+      ImageUrl
     });
     
     res.status(200).json({

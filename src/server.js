@@ -16,6 +16,8 @@ import adminRoutes from './routes/adminRoutes.js';
 import rsvpRoutes from './routes/rsvpRoutes.js';
 import userRoutes from './routes/userRoutes.js';
 import eventRequestRoutes from './routes/eventRequestRoutes.js';
+import venueRoutes from './routes/venueRoutes.js';
+import hostRoutes from './routes/hostRoutes.js';
 
 // Swagger is configured via swaggerSpecs and mounted below
 
@@ -54,6 +56,8 @@ app.use("/api/admin", adminRoutes);
 app.use("/api/users", userRoutes);
 app.use('/api/events', rsvpRoutes);
 app.use('/api/host-applications', eventRequestRoutes);
+app.use('/api/venues', venueRoutes);
+app.use('/api/hosts', hostRoutes);
 
 // Root route (so "/" doesn't show "Cannot GET /")
 app.get("/", (_req, res) => {

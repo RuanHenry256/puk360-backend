@@ -20,8 +20,11 @@ import {
   rejectEvent,
   getHosts,
   approveHost,
-  getAnalytics
+  getAnalytics,
+  listHostApplications,
+  reviewHostApp,
 } from '../controllers/adminController.js';
+import { requireAuth } from '../middleware/auth.js';
 
 const router = Router();
 /**
@@ -36,7 +39,7 @@ const router = Router();
  *       200:
  *         description: Array of pending events
  */
-router.get('/pending-events', getPendingEvents);
+router.get('/pending-events', requireAuth, getPendingEvents);
 /**
  * @swagger
  * /api/admin/events/{id}/approve:
@@ -55,7 +58,7 @@ router.get('/pending-events', getPendingEvents);
  *       200:
  *         description: Event approved
  */
-router.patch('/events/:id/approve', approveEvent);
+router.patch('/events/:id/approve', requireAuth, approveEvent);
 /**
  * @swagger
  * /api/admin/events/{id}/reject:
@@ -74,7 +77,7 @@ router.patch('/events/:id/approve', approveEvent);
  *       200:
  *         description: Event rejected
  */
-router.patch('/events/:id/reject', rejectEvent);
+router.patch('/events/:id/reject', requireAuth, rejectEvent);
 /**
  * @swagger
  * /api/admin/hosts:
@@ -87,7 +90,7 @@ router.patch('/events/:id/reject', rejectEvent);
  *       200:
  *         description: Array of hosts
  */
-router.get('/hosts', getHosts);
+router.get('/hosts', requireAuth, getHosts);
 /**
  * @swagger
  * /api/admin/hosts/{id}/approve:
@@ -106,7 +109,7 @@ router.get('/hosts', getHosts);
  *       200:
  *         description: Host approved
  */
-router.patch('/hosts/:id/approve', approveHost);
+router.patch('/hosts/:id/approve', requireAuth, approveHost);
 /**
  * @swagger
  * /api/admin/analytics:
@@ -119,6 +122,10 @@ router.patch('/hosts/:id/approve', approveHost);
  *       200:
  *         description: Analytics data
  */
-router.get('/analytics', getAnalytics);
+router.get('/analytics', requireAuth, getAnalytics);
+
+// Host applications moderation
+router.get('/host-applications', requireAuth, listHostApplications);
+router.patch('/host-applications/:id', requireAuth, reviewHostApp); // body: { decision, comment }
 
 export default router;
