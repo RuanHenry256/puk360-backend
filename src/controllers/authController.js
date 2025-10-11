@@ -5,6 +5,7 @@
  * and issues JWTs on success.
  */
 import jwt from "jsonwebtoken";
+import { getSqlPool, sql } from "../db/sql.js";
 import {
   verifyUserByEmailPassword,
   createUserWithSqlHash,
@@ -76,6 +77,14 @@ export async function login(req, res) {
     // }
 
     const roles = await getUserRoles(user.User_ID);
+    // attach host status (if any)
+    let hostStatus = null;
+    try {
+      const pool = await getSqlPool();
+      const rs = await pool.request().input('uid', sql.Int, user.User_ID)
+        .query(`SELECT TOP 1 Approval_Status, Activity_Status, Is_Active FROM dbo.Host_Profile WHERE User_ID=@uid`);
+      hostStatus = rs.recordset?.[0] || null;
+    } catch {}
     const token = jwt.sign(
       { id: user.User_ID, email: user.Email, roles },
       process.env.JWT_SECRET,
@@ -84,7 +93,7 @@ export async function login(req, res) {
 
     res.json({
       token,
-      user: { id: user.User_ID, name: user.Name, email: user.Email, roles }
+      user: { id: user.User_ID, name: user.Name, email: user.Email, roles, hostStatus }
     });
   } catch (err) {
     console.error("Login error:", err);
