@@ -23,6 +23,12 @@ import {
   getAnalytics,
   listHostApplications,
   reviewHostApp,
+  listUsers,
+  listRoles,
+  updateUser,
+  deleteUser,
+  getUser,
+  reactivateHostAccount,
 } from '../controllers/adminController.js';
 import { requireAuth } from '../middleware/auth.js';
 
@@ -127,5 +133,13 @@ router.get('/analytics', requireAuth, getAnalytics);
 // Host applications moderation
 router.get('/host-applications', requireAuth, listHostApplications);
 router.patch('/host-applications/:id', requireAuth, reviewHostApp); // body: { decision, comment }
+
+// Users management
+router.get('/users', requireAuth, listUsers); // optional ?q=term
+router.get('/roles', requireAuth, listRoles);
+router.get('/users/:id', requireAuth, getUser);
+router.patch('/users/:id', requireAuth, updateUser);
+router.delete('/users/:id', requireAuth, deleteUser);
+router.post('/hosts/:id/reactivate', requireAuth, reactivateHostAccount);
 
 export default router;
