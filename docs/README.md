@@ -10,6 +10,7 @@
 New/updated docs:
 - Hosts (status guard + analytics): `HOSTS.md`
 - Admin Host Applications: `ADMIN_HOST_APPLICATIONS.md`
+- Admin Users (list/edit/delete, roles, host reactivation): `ADMIN_USERS.md`
 - Database changes summary: `DATABASE_CHANGES.md`
 
 Notes:
