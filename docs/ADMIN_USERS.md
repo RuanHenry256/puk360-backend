@@ -63,4 +63,5 @@ Errors
 ```
 
 Notes
-- SQL Server compatibility: role aggregation uses `STRING_AGG` when available, with a fallback query for older versions.
+- SQL Server compatibility: role aggregation uses `STRING_AGG` when available.
+  - On older SQL Server versions, the service falls back to an `XML PATH` aggregation so `Roles` is still populated with readable role names (e.g., `["Student", "Host"]`). This ensures frontends can always render role badges and filters reliably.

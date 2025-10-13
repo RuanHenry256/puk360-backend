@@ -191,23 +191,40 @@ export async function listUsers({ q } = {}) {
       Roles: row.RolesCsv ? String(row.RolesCsv).split(',').map((s) => s.trim()).filter(Boolean) : [],
     }));
   } catch (err) {
-    // Fallback without STRING_AGG (older SQL versions) – return basic rows.
+    // Fallback for SQL Server versions without STRING_AGG.
+    // Use classic STUFF(... FOR XML PATH('')) technique to aggregate role names per user.
     const result = await pool
       .request()
       .input("q", sql.NVarChar(200), term.length ? `%${term}%` : null)
       .query(`
-        SELECT u.User_ID, u.Name, u.Email, u.Status
+        SELECT
+          u.User_ID,
+          u.Name,
+          u.Email,
+          u.Status,
+          RolesCsv = STUFF(
+            (
+              SELECT ',' + r.Role_Name
+              FROM UserRoles ur2
+              INNER JOIN Roles r ON r.Role_ID = ur2.Role_ID
+              WHERE ur2.User_ID = u.User_ID
+              ORDER BY r.Role_Name
+              FOR XML PATH(''), TYPE
+            ).value('.', 'NVARCHAR(MAX)'),
+            1, 1, ''
+          )
         FROM [User] u
         WHERE (@q IS NULL)
            OR (u.Name LIKE @q OR u.Email LIKE @q)
         ORDER BY u.Name ASC;
       `);
+
     return result.recordset.map((row) => ({
       User_ID: row.User_ID,
       Name: row.Name,
       Email: row.Email,
       Status: row.Status,
-      Roles: [],
+      Roles: row.RolesCsv ? String(row.RolesCsv).split(',').map((s) => s.trim()).filter(Boolean) : [],
     }));
   }
 }
