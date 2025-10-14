@@ -41,7 +41,7 @@ Event.init(
       field: 'Date'
     },
     Time: {
-      type: DataTypes.TIME,
+      type: DataTypes.STRING,
       allowNull: false,
       field: 'Time'
     },
@@ -77,7 +77,7 @@ Event.init(
       defaultValue: 'NWU Events'
     },
     endTime: {
-      type: DataTypes.TIME,
+      type: DataTypes.STRING,
       allowNull: true,
     },
     venue: {
