@@ -10,38 +10,53 @@ export const JoinEvent = async(req, res) => {
     const { userId } = req.body;
 
     try {
-        // Check if user already joined using COUNT
-        const [result] = await sequelize.query(
-            `SELECT COUNT(*) as count FROM Event_Attendees WHERE Event_ID = :event_Id AND User_ID = :userId`,
-            {
-                replacements: { event_Id, userId },
-                type: sequelize.QueryTypes.SELECT,
+        // Check if already joined using Sequelize
+        const existingAttendee = await Event_Attendees.findOne({
+            where: { 
+                Event_ID: event_Id, 
+                User_ID: userId 
             }
-        );
+        });
 
-        if (result.count > 0) {
+        if (existingAttendee) {
             return res.status(400).json({ error: "Already joined this event" });
         }
 
-        // Insert using raw SQL
-        await sequelize.query(
-            `INSERT INTO Event_Attendees (Event_ID, User_ID, RSVP_Status, Timestamp) 
-             VALUES (:event_Id, :userId, 'Attending', GETDATE())`,
-            {
-                replacements: { event_Id, userId },
+        // Create using Sequelize model
+        const newAttendee = await Event_Attendees.create({
+            Event_ID: event_Id,
+            User_ID: userId,
+            RSVP_Status: 'Attending',
+            Timestamp: new Date()
+        });
+
+        // Verify creation
+        if (!newAttendee) {
+            return res.status(500).json({ error: "Failed to create attendance record" });
+        }
+
+        res.status(201).json({ 
+            message: "Successfully registered for event",
+            data: {
+                Event_ID: newAttendee.Event_ID,
+                User_ID: newAttendee.User_ID,
+                RSVP_Status: newAttendee.RSVP_Status,
+                Timestamp: newAttendee.Timestamp
             }
-        );
-         
-        res.status(201).json({ message: "Successfully registered for event" });
+        });
 
     } catch (err) {
         console.error('JoinEvent Error:', err);
         
-        if (err.original && err.original.number === 547) {
+        if (err.name === 'SequelizeForeignKeyConstraintError') {
             return res.status(400).json({ error: "Invalid event or user ID" });
         }
         
-        return res.status(500).json({ error: "Internal server error" });
+        if (err.name === 'SequelizeUniqueConstraintError') {
+            return res.status(400).json({ error: "Already registered for this event" });
+        }
+        
+        return res.status(500).json({ error: "Internal server error: " + err.message });
     }
 };
 
@@ -66,49 +81,48 @@ export const cancelRSVP = async (req, res) => {
 };
 
 //Get all attendees API
+// Get all attendees API (Fixed)
 export const getAttendees = async (req, res) => {
   const eventId = req.params.id;
 
   try {
-    //Check if the event exists
+    // Check if the event exists
     const event = await Event.findOne({
-  where: { id: eventId },
-  attributes: ['id', 'title', 'date', 'location', 'status']
+      where: { Event_ID: eventId }, // Fixed field name
+      attributes: ['Event_ID', 'Title', 'Date', 'venue', 'Status'] // Fixed field names
     });
-
 
     if (!event) {
       return res.status(404).json({ error: "Event not found" });
     }
 
-    //Fetch attendees for that event
+    // Fetch attendees for that event
     const attendees = await Event_Attendees.findAll({
       where: { Event_ID: eventId },
       attributes: ["User_ID"],
     });
 
-    //Map to clean array
+    // Map to clean array
     const userIds = attendees.map((a) => a.User_ID);
 
-    //Return event info and attendees (even if empty)
+    // Return event info and attendees
     res.status(200).json({
       event: {
-        id: event.id,
-        title: event.title,
-        date: event.date,
-        venue: event.location,
-        status: event.status,
+        id: event.Event_ID, // Fixed field name
+        title: event.Title, // Fixed field name
+        date: event.Date, // Fixed field name
+        venue: event.venue,
+        status: event.Status, // Fixed field name
       },
       attendees: userIds, 
       attendeeCount: userIds.length, 
-      message:
-        userIds.length > 0
+      message: userIds.length > 0
           ? "Attendees retrieved successfully"
           : "No attendees yet for this event",
     });
   } catch (err) {
-  res.status(500).json({ error: err.message || "Unknown error occurred" });
- }
+    res.status(500).json({ error: err.message || "Unknown error occurred" });
+  }
 }
 
 
