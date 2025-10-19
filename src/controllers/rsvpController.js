@@ -1,7 +1,7 @@
 import { Sequelize } from "sequelize";
-import Event_Attendees from "../models/EventAttendees.js";
-import Event from "../models/Event.js";
-import User from "../models/User.js";
+import Event_Attendees from "../models/eventattendees.js";
+import Event from "../models/event.js";
+import User from "../models/user.js";
 import sequelize from "../config/db.js";
 
 // POST: Join 

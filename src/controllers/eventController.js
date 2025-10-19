@@ -1,5 +1,5 @@
-import Event from '../models/Event.js';
-import Venue from '../models/Venue.js';
+import Event from '../models/event.js';
+import Venue from '../models/venue.js';
 import { Op } from 'sequelize';
 
 // Get all events
