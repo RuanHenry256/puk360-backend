@@ -2,6 +2,32 @@ import Event from '../models/event.js';
 import Venue from '../models/venue.js';
 import { Op } from 'sequelize';
 
+// Helper function to format time for display
+const formatTimeForDisplay = (timeValue) => {
+  if (!timeValue) return '';
+  
+  // If it's a Date object, extract UTC time
+  if (timeValue instanceof Date) {
+    const hours = timeValue.getUTCHours().toString().padStart(2, '0');
+    const minutes = timeValue.getUTCMinutes().toString().padStart(2, '0');
+    return `${hours}:${minutes}`;
+  }
+  
+  // For strings or other types, use safe conversion
+  return String(timeValue).substring(0, 5);
+};
+// Helper function to create time range display
+const createTimeRange = (startTime, endTime) => {
+  const formattedStart = formatTimeForDisplay(startTime);
+  
+  if (!endTime) {
+    return formattedStart; // Return just start time if no end time
+  }
+  
+  const formattedEnd = formatTimeForDisplay(endTime);
+  return `${formattedStart} - ${formattedEnd}`;
+};
+
 // Get all events
 export const getAllEvents = async (req, res) => {
   try {
@@ -29,9 +55,18 @@ export const getAllEvents = async (req, res) => {
       where,
     });
     
+    // Format events with time range
+    const formattedEvents = events.map(event => ({
+      ...event.toJSON(),
+      displayTime: createTimeRange(event.Time, event.endTime),
+      // Keep individual times for editing purposes
+      Time: formatTimeForDisplay(event.Time),
+      endTime: event.endTime ? formatTimeForDisplay(event.endTime) : null
+    }));
+    
     res.status(200).json({
       status: 'success',
-      data: events,
+      data: formattedEvents,
     });
   } catch (error) {
     res.status(500).json({
@@ -72,9 +107,18 @@ export const getEvent = async (req, res) => {
       });
     }
     
+    // Format event with time range
+    const formattedEvent = {
+      ...event.toJSON(),
+      displayTime: createTimeRange(event.Time, event.endTime),
+      // Keep individual times for editing purposes
+      Time: formatTimeForDisplay(event.Time),
+      endTime: event.endTime ? formatTimeForDisplay(event.endTime) : null
+    };
+    
     res.status(200).json({
       status: 'success',
-      data: event,
+      data: formattedEvent,
     });
   } catch (error) {
     res.status(500).json({
@@ -104,6 +148,7 @@ export const createEvent = async (req, res) => {
       campus,
       ImageUrl
     } = req.body;
+    
     let resolvedVenueId = (Venue_ID !== undefined && Venue_ID !== null && Venue_ID !== '') ? Number(Venue_ID) : undefined;
     if (!resolvedVenueId && process.env.DEFAULT_VENUE_ID) {
       resolvedVenueId = Number(process.env.DEFAULT_VENUE_ID);
@@ -134,10 +179,16 @@ export const createEvent = async (req, res) => {
       ImageUrl: cleanImageUrl
     });
     
+    // Return created event with formatted time range
+    const formattedEvent = {
+      ...event.toJSON(),
+      displayTime: createTimeRange(event.Time, event.endTime)
+    };
+    
     res.status(201).json({
       status: 'success',
       message: 'Event created',
-      data: event,
+      data: formattedEvent,
     });
   } catch (error) {
     res.status(400).json({
@@ -193,10 +244,16 @@ export const updateEvent = async (req, res) => {
       ImageUrl
     });
     
+    // Return updated event with formatted time range
+    const formattedEvent = {
+      ...event.toJSON(),
+      displayTime: createTimeRange(event.Time, event.endTime)
+    };
+    
     res.status(200).json({
       status: 'success',
       message: 'Event updated',
-      data: event,
+      data: formattedEvent,
     });
   } catch (error) {
     res.status(400).json({
@@ -219,10 +276,17 @@ export const updateEventStatus = async (req, res) => {
     }
     const { Status } = req.body;
     await event.update({ Status });
+    
+    // Return updated event with formatted time range
+    const formattedEvent = {
+      ...event.toJSON(),
+      displayTime: createTimeRange(event.Time, event.endTime)
+    };
+    
     res.status(200).json({
       status: 'success',
       message: 'Event status updated',
-      data: event,
+      data: formattedEvent,
     });
   } catch (error) {
     res.status(400).json({
