@@ -1,4 +1,4 @@
-import Venue from '../models/Venue.js';
+import Venue from '../models/venue.js';
 
 export const getAllVenues = async (_req, res) => {
   try {

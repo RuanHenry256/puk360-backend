@@ -1,6 +1,6 @@
 import { DataTypes } from "sequelize";
 import sequelize from "../config/db.js";
-import User from "./User.js";
+import User from "./user.js";
 
 const Event_Attendees = sequelize.define("Event_Attendees", {
     Event_ID: { type: DataTypes.INTEGER, primaryKey: true, allowNull: false, references: { model: 'Event', key: 'Event_ID'}},

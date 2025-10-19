@@ -9,6 +9,9 @@
     "dev": "nodemon src/server.js",
     "test": "echo \"Error: no test specified\" && exit 0"
   },
+  "engines": {
+    "node": ">=18"
+  },
   "repository": {
     "type": "git",
     "url": "git+https://github.com/RuanHenry256/puk360-backend.git"

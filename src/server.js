@@ -27,9 +27,9 @@ import express from "express";
 import cors from "cors";
 
 // import sequelize from "./config/config.cjs";
-import User from "./models/User.js"; // Example model
+import User from "./models/user.js"; // Example model
 
-import Event_Attendees from './models/EventAttendees.js';
+import Event_Attendees from './models/eventattendees.js';
 
 import sequelize from "./config/db.js";        // your Sequelize instance
 import { getSqlPool, sql } from "./db/sql.js"; // mssql pool + types (for diag route)
