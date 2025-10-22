@@ -89,17 +89,32 @@ export const getDashboardMetrics = async (_req, res) => {
        ORDER BY count DESC, venue ASC`
     );
 
-    // User insights (best effort if created date exists)
+    // User insights: prefer Audit_Log if available; fallback to Created_* columns
     let newUsersThisMonth = 0;
     try {
-      const [rows] = await sequelize.query(
-        `SELECT COUNT(*) AS total FROM [User]
-         WHERE (YEAR([Created_At]) = YEAR(GETDATE()) AND MONTH([Created_At]) = MONTH(GETDATE()))
-            OR (YEAR([CreatedAt]) = YEAR(GETDATE()) AND MONTH([CreatedAt]) = MONTH(GETDATE()))
-            OR (YEAR([Registration_Date]) = YEAR(GETDATE()) AND MONTH([Registration_Date]) = MONTH(GETDATE()))`
+      const [r1] = await sequelize.query(
+        `IF OBJECT_ID('dbo.Audit_Log','U') IS NOT NULL
+           SELECT COUNT(*) AS total
+           FROM dbo.Audit_Log
+           WHERE Event_Type='user_registered'
+             AND YEAR(Created_At)=YEAR(GETDATE())
+             AND MONTH(Created_At)=MONTH(GETDATE())
+         ELSE
+           SELECT 0 AS total`
       );
-      newUsersThisMonth = Number(rows?.[0]?.total || 0);
+      newUsersThisMonth = Number(r1?.[0]?.total || 0);
     } catch { newUsersThisMonth = 0; }
+    if (!newUsersThisMonth) {
+      try {
+        const [rows] = await sequelize.query(
+          `SELECT COUNT(*) AS total FROM [User]
+           WHERE (YEAR([Created_At]) = YEAR(GETDATE()) AND MONTH([Created_At]) = MONTH(GETDATE()))
+              OR (YEAR([CreatedAt]) = YEAR(GETDATE()) AND MONTH([CreatedAt]) = MONTH(GETDATE()))
+              OR (YEAR([Registration_Date]) = YEAR(GETDATE()) AND MONTH([Registration_Date]) = MONTH(GETDATE()))`
+        );
+        newUsersThisMonth = Number(rows?.[0]?.total || 0);
+      } catch { newUsersThisMonth = 0; }
+    }
 
     // Hosts: verified vs pending (best effort)
     let hostsActive = 0;
@@ -108,28 +123,44 @@ export const getDashboardMetrics = async (_req, res) => {
       hostsActive = Number(h?.[0]?.total || 0);
     } catch { hostsActive = 0; }
 
-    // Most active user (by RSVPs + Reviews)
+    // Most active user this month by sign-ins; fallback to RSVP+Reviews
     let mostActiveUser = null;
     try {
-      const [ma] = await sequelize.query(
-        `WITH attend AS (
-           SELECT EA.User_ID, COUNT(*) AS c1 FROM [Event_Attendees] EA GROUP BY EA.User_ID
-         ),
-         reviews AS (
-           SELECT R.Reviewer_User_ID AS User_ID, COUNT(*) AS c2 FROM [Review] R GROUP BY R.Reviewer_User_ID
-         ),
-         combined AS (
-           SELECT COALESCE(a.User_ID, r.User_ID) AS User_ID, COALESCE(a.c1,0)+COALESCE(r.c2,0) AS score
-           FROM attend a
-           FULL OUTER JOIN reviews r ON r.User_ID = a.User_ID
-         )
-         SELECT TOP 1 U.User_ID AS userId, U.Name AS name, score
-         FROM combined c
-         LEFT JOIN [User] U ON U.User_ID = c.User_ID
-         ORDER BY score DESC, U.Name ASC`
+      const [maLogin] = await sequelize.query(
+        `IF OBJECT_ID('dbo.Audit_Log','U') IS NOT NULL
+           SELECT TOP 1 U.User_ID AS userId, U.Name AS name, COUNT(*) AS score
+           FROM dbo.Audit_Log L
+           LEFT JOIN [User] U ON U.User_ID = L.User_ID
+           WHERE L.Event_Type='user_login' AND L.Created_At >= DATEADD(day, -30, GETDATE())
+           GROUP BY U.User_ID, U.Name
+           ORDER BY COUNT(*) DESC, U.Name ASC
+         ELSE
+           SELECT NULL AS userId, NULL AS name, 0 AS score`
       );
-      mostActiveUser = ma?.[0] || null;
-    } catch { mostActiveUser = null; }
+      if (maLogin?.[0]?.userId) mostActiveUser = maLogin[0];
+    } catch { /* ignore */ }
+    if (!mostActiveUser) {
+      try {
+        const [ma] = await sequelize.query(
+          `WITH attend AS (
+             SELECT EA.User_ID, COUNT(*) AS c1 FROM [Event_Attendees] EA GROUP BY EA.User_ID
+           ),
+           reviews AS (
+             SELECT R.Reviewer_User_ID AS User_ID, COUNT(*) AS c2 FROM [Review] R GROUP BY R.Reviewer_User_ID
+           ),
+           combined AS (
+             SELECT COALESCE(a.User_ID, r.User_ID) AS User_ID, COALESCE(a.c1,0)+COALESCE(r.c2,0) AS score
+             FROM attend a
+             FULL OUTER JOIN reviews r ON r.User_ID = a.User_ID
+           )
+           SELECT TOP 1 U.User_ID AS userId, U.Name AS name, score
+           FROM combined c
+           LEFT JOIN [User] U ON U.User_ID = c.User_ID
+           ORDER BY score DESC, U.Name ASC`
+        );
+        mostActiveUser = ma?.[0] || null;
+      } catch { mostActiveUser = null; }
+    }
 
     // Reviews metrics
     const [avgEventRatingRows] = await sequelize.query(`SELECT AVG(CAST([Rating] AS FLOAT)) AS avg FROM [Review]`);

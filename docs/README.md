@@ -11,9 +11,10 @@ New/updated docs:
 - Hosts (status guard + analytics): `HOSTS.md`
 - Admin Host Applications: `ADMIN_HOST_APPLICATIONS.md`
 - Admin Users (list/edit/delete, roles, host reactivation): `ADMIN_USERS.md`
-- Admin Dashboard payload: `ADMIN_DASHBOARD.md`
+- Admin Dashboard + Logs: `ADMIN_DASHBOARD.md` (includes `/api/admin/logs`)
 - Database changes summary: `DATABASE_CHANGES.md`
 
 Notes:
-- See `AUTHENTICATION.md` for deeper backend auth details (hashing, diagnostics, middleware).
+- Audit logging is implemented in `src/data/auditRepo.js` and currently logs user registrations and logins. Extend by calling `logEvent()` from other controllers to enrich analytics.
+- See `authentication.md` for backend auth details (JWT, hashing).
 - Explore `http://localhost:5000/api-docs` for live API documentation.

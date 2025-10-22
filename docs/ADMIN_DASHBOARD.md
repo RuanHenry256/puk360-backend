@@ -2,8 +2,9 @@
 
 Defines the payload consumed by the admin overview in the frontend.
 
-Endpoint
+Endpoints
 - `GET /api/admin/dashboard` (requires Authorization: Bearer <token> with Admin role)
+- `GET /api/admin/logs?limit=500&q=term` — read-only audit log feed for the Admin Logs tab.
 
 Response shape
 ```json
@@ -55,5 +56,17 @@ Notes
 - `events.topVenues` may be an array of strings or objects containing a display name; the UI extracts `name|title|venue`.
 - `reviews.recentSnippets` accepts either strings or objects with `text|comment|content` fields.
 
+Data sources (server)
+- Dashboard prefers first‑party counts but now augments some values using the audit log when present:
+  - New users (This Month): from `dbo.Audit_Log` events of type `user_registered` in the current month, with a fallback to user Created_* date columns.
+  - Most active user: prefers the user with the most `user_login` events in the last 30 days; falls back to combined RSVPs + Reviews activity.
+
+Admin Logs
+- `GET /api/admin/logs` returns recent entries from `dbo.Audit_Log` joined with the `User` table for name/email.
+- Query params:
+  - `limit` (default 500, max 5000)
+  - `q` (optional search term across event type, target, metadata, user name/email)
+
 Related files
 - Frontend consumer: `puk360-frontend/src/pages/AdminMainDash.jsx`
+- Audit repository: `puk360-backend/src/data/auditRepo.js`

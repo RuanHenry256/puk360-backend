@@ -40,8 +40,9 @@ Role IDs
 
 ## Update a user
 - PATCH `/api/admin/users/:id`
-- Body: `{ name?: string, email?: string, roles?: number[] | ("Student"|"Host"|"Admin")[] }`
+- Body: `{ name?: string, email?: string, roles?: number[] | ("Student"|"Host"|"Admin")[], password?: string }`
 - Behavior: Updates name/email; when `roles` is provided, replaces role mappings using the provided IDs/names.
+  - If `password` is provided and non-empty (min 6 chars), the backend resets the user password using SQL `HASHBYTES('SHA2_256', @pw)` so it matches registration hashing.
 - Response
 ```
 { "data": { "User_ID": 12, "Name": "Jane Doe", "Email": "jane@example.com", "Roles": ["Student","Admin"] } }

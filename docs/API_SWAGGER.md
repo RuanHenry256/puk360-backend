@@ -43,6 +43,13 @@ Tip: Use `POST /api/auth/login` from the UI to obtain a token, then click Author
   - `POST /api/{id}/reviews`
   - `GET /api/{id}/reviews`
   - `DELETE /api/{id}`
+- Admin: `puk360-backend/src/routes/adminRoutes.js`
+  - `GET /api/admin/dashboard` (analytics)
+  - `GET /api/admin/users` `GET /api/admin/users/{id}` `PATCH /api/admin/users/{id}` (name/email/roles and optional password)
+  - `GET /api/admin/roles`
+  - `GET /api/admin/host-applications` `PATCH /api/admin/host-applications/{id}`
+  - `POST /api/admin/hosts/{id}/reactivate`
+  - `GET /api/admin/logs` (audit feed; supports `limit` and `q`)
 
 Note: The UI is driven by JSDoc comments inside these files. Adjust comments to update the docs.
 

@@ -1,5 +1,6 @@
 /** Admin controller */
 import { selectAllHostApplications, reviewHostApplication } from '../data/eventRequestRepo.js';
+import sequelize from '../config/db.js';
 import {
   listUsers as repoListUsers,
   listRoles as repoListRoles,
@@ -10,6 +11,7 @@ import {
   deleteUser as repoDeleteUser,
   getUserWithRolesAndHostStatus,
   reactivateHost,
+  updateUserPasswordSqlHash,
 } from '../data/userRepo.js';
 
 export const getPendingEvents = (req, res) => {
@@ -87,9 +89,14 @@ export const listRoles = async (_req, res) => {
 export const updateUser = async (req, res) => {
   try {
     const id = Number(req.params.id);
-    const { name, email, roles } = req.body || {};
+    const { name, email, roles, password } = req.body || {};
     if (!id) return res.status(400).json({ error: 'Missing user id' });
     const updated = await updateUserAdmin({ userId: id, name, email });
+    if (typeof password === 'string' && password.trim().length) {
+      // Minimum password length check (basic safeguard)
+      if (password.trim().length < 6) return res.status(400).json({ error: 'Password must be at least 6 characters.' });
+      await updateUserPasswordSqlHash(id, password.trim());
+    }
     // Replace roles if provided
     if (Array.isArray(roles)) {
       const roleIds = await resolveRoleIds(roles);
@@ -137,5 +144,54 @@ export const reactivateHostAccount = async (req, res) => {
     res.json({ data: status });
   } catch (e) {
     res.status(500).json({ error: 'Failed to reactivate host', details: e.message });
+  }
+};
+
+// List audit logs (read-only). Supports ?limit=500 and optional ?q=search
+export const listAuditLogs = async (req, res) => {
+  try {
+    const limit = Math.max(1, Math.min(5000, Number(req.query.limit || 500)));
+    const q = (req.query.q || '').toString().trim();
+
+    // If table doesn't exist, return empty
+    const [existsRows] = await sequelize.query(`SELECT CASE WHEN OBJECT_ID('dbo.Audit_Log','U') IS NULL THEN 0 ELSE 1 END AS ok`);
+    const ok = Number(existsRows?.[0]?.ok || 0) === 1;
+    if (!ok) return res.json({ data: [] });
+
+    const where = q
+      ? `WHERE (L.Event_Type LIKE @q OR L.Target_Type LIKE @q OR ISNULL(L.Metadata,'') LIKE @q OR ISNULL(U.Name,'') LIKE @q OR ISNULL(U.Email,'') LIKE @q)`
+      : '';
+
+    // Using OFFSET/FETCH for parameterized limit
+    const sql = `
+      DECLARE @lim INT = ${limit};
+      SELECT L.Log_ID AS id,
+             L.Created_At AS createdAt,
+             L.Event_Type AS eventType,
+             L.User_ID    AS userId,
+             L.Target_Type AS targetType,
+             L.Target_ID   AS targetId,
+             L.Metadata    AS metadata,
+             U.Name        AS userName,
+             U.Email       AS userEmail
+      FROM dbo.Audit_Log L
+      LEFT JOIN [User] U ON U.User_ID = L.User_ID
+      ${where}
+      ORDER BY L.Created_At DESC, L.Log_ID DESC
+      OFFSET 0 ROWS FETCH NEXT @lim ROWS ONLY`;
+
+    let rows;
+    if (q) {
+      const like = `%${q.replace(/'/g, "''")}%`;
+      // sequelize.query does not support named params here; embed safely
+      const [data] = await sequelize.query(sql.replace('@q', `'${like}'`));
+      rows = data || [];
+    } else {
+      const [data] = await sequelize.query(sql);
+      rows = data || [];
+    }
+    res.json({ data: rows });
+  } catch (e) {
+    res.status(500).json({ error: 'Failed to fetch audit logs', details: e.message });
   }
 };

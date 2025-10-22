@@ -245,6 +245,21 @@ export async function updateUserAdmin({ userId, name, email }) {
   return updateUserProfile({ userId, name, email });
 }
 
+/** Update a user's password, hashing in SQL to match registration */
+export async function updateUserPasswordSqlHash(userId, plainPassword) {
+  const pool = await getSqlPool();
+  await pool
+    .request()
+    .input('userId', sql.Int, userId)
+    .input('pw', sql.NVarChar(400), plainPassword)
+    .query(`
+      UPDATE [User]
+      SET Password_Hash = CONVERT(NVARCHAR(255), HASHBYTES('SHA2_256', @pw))
+      WHERE User_ID = @userId
+    `);
+  return true;
+}
+
 /** Replace a user's roles by role IDs (full replacement) */
 export async function replaceUserRolesByIds(userId, roleIds = []) {
   const pool = await getSqlPool();

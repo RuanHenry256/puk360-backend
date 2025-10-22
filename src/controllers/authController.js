@@ -13,6 +13,7 @@ import {
   getUserRoles,
   ensureUserRole
 } from "../data/userRepo.js";
+import { logEvent } from "../data/auditRepo.js";
 
 /**
  * POST /api/auth/register
@@ -47,6 +48,9 @@ export async function register(req, res) {
       process.env.JWT_SECRET,
       { expiresIn: "1h" }
     );
+
+    // fire-and-forget audit log
+    logEvent({ eventType: 'user_registered', userId });
 
     res.status(201).json({
       token,
@@ -90,6 +94,9 @@ export async function login(req, res) {
       process.env.JWT_SECRET,
       { expiresIn: "1h" }
     );
+
+    // fire-and-forget audit log
+    logEvent({ eventType: 'user_login', userId: user.User_ID });
 
     res.json({
       token,
