@@ -3,7 +3,7 @@
  * Stubs for adding, listing, and deleting reviews for events.
  */
 import Review from "../models/review.js";
-import Event from "../models/event.js";
+import Event from "../models/Event.js";
 import { getSqlPool, sql } from "../db/sql.js";
 
 // Submit a new review

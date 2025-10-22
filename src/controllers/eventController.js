@@ -1,4 +1,4 @@
-import Event from '../models/event.js';
+import Event from '../models/Event.js';
 import Venue from '../models/venue.js';
 import { Op } from 'sequelize';
 
