@@ -35,6 +35,7 @@
  *           type: string
  */
 import { Router } from 'express';
+import { requireAuth } from '../middleware/auth.js';
 import {
   addReview,
   getReviews,
@@ -70,7 +71,7 @@ const router = Router();
  *             schema:
  *               $ref: '#/components/schemas/Review'
  */
-router.post('/:id/reviews', addReview);
+router.post('/events/:id/reviews', requireAuth, addReview);
 /**
  * @swagger
  * /api/{id}/reviews:
@@ -94,10 +95,10 @@ router.post('/:id/reviews', addReview);
  *               items:
  *                 $ref: '#/components/schemas/Review'
  */
-router.get('/:id/reviews', getReviews);
+router.get('/events/:id/reviews', getReviews);
 /**
  * @swagger
- * /api/{id}:
+ * /api/reviews/{id}:
  *   delete:
  *     summary: Delete a review by ID
  *     tags: [Reviews]
@@ -112,6 +113,6 @@ router.get('/:id/reviews', getReviews);
  *       200:
  *         description: Review deleted
  */
-router.delete('/:id', deleteReview);
+router.delete('/reviews/:id', requireAuth, deleteReview);
 
 export default router;

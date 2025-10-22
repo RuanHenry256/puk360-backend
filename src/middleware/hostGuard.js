@@ -2,6 +2,12 @@ import { getSqlPool, sql } from '../db/sql.js';
 
 export async function requireActiveHost(req, res, next) {
   try {
+    // Allow Admins to bypass host active check
+    const roles = Array.isArray(req.user?.roles) ? req.user.roles.map(String) : [];
+    if (roles.some(r => r.toLowerCase() === 'admin' || r.toLowerCase() === 'administrator')) {
+      return next();
+    }
+
     const userId = req.user?.id;
     if (!userId) return res.status(401).json({ error: 'Unauthorized' });
     const pool = await getSqlPool();
@@ -23,4 +29,3 @@ export async function requireActiveHost(req, res, next) {
     return res.status(500).json({ error: 'Failed to verify host status', details: e.message });
   }
 }
-

@@ -31,6 +31,7 @@ import {
   reactivateHostAccount,
 } from '../controllers/adminController.js';
 import { requireAuth } from '../middleware/auth.js';
+import { getDashboardMetrics } from '../controllers/adminDashboardController.js';
 
 const router = Router();
 /**
@@ -129,6 +130,7 @@ router.patch('/hosts/:id/approve', requireAuth, approveHost);
  *         description: Analytics data
  */
 router.get('/analytics', requireAuth, getAnalytics);
+router.get('/dashboard', requireAuth, getDashboardMetrics);
 
 // Host applications moderation
 router.get('/host-applications', requireAuth, listHostApplications);

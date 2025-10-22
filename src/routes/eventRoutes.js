@@ -39,6 +39,12 @@ const router = Router();
  *         date:
  *           type: string
  *           format: date-time
+ *         startTime:
+ *           type: string
+ *           description: HH:mm (24h)
+ *         endTime:
+ *           type: string
+ *           description: HH:mm (24h), optional
  *         location:
  *           type: string
  *         status:
@@ -57,6 +63,12 @@ const router = Router();
  *         date:
  *           type: string
  *           format: date-time
+ *         startTime:
+ *           type: string
+ *           description: HH:mm (24h)
+ *         endTime:
+ *           type: string
+ *           description: HH:mm (24h), optional
  *         location:
  *           type: string
  *         status:

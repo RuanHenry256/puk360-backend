@@ -41,10 +41,9 @@ export const getAllEvents = async (req, res) => {
         'Title', 
         'Description', 
         'Date', 
-        'Time',
+        'startTime',
         'endTime',
         'Status',
-        'type',
         'category',
         'hostedBy',
         'venue',
@@ -58,9 +57,9 @@ export const getAllEvents = async (req, res) => {
     // Format events with time range
     const formattedEvents = events.map(event => ({
       ...event.toJSON(),
-      displayTime: createTimeRange(event.Time, event.endTime),
+      displayTime: createTimeRange(event.startTime, event.endTime),
       // Keep individual times for editing purposes
-      Time: formatTimeForDisplay(event.Time),
+      startTime: formatTimeForDisplay(event.startTime),
       endTime: event.endTime ? formatTimeForDisplay(event.endTime) : null
     }));
     
@@ -86,10 +85,9 @@ export const getEvent = async (req, res) => {
         'Title', 
         'Description', 
         'Date', 
-        'Time',
+        'startTime',
         'endTime',
         'Status',
-        'type',
         'category',
         'hostedBy',
         'venue',
@@ -110,9 +108,9 @@ export const getEvent = async (req, res) => {
     // Format event with time range
     const formattedEvent = {
       ...event.toJSON(),
-      displayTime: createTimeRange(event.Time, event.endTime),
+      displayTime: createTimeRange(event.startTime, event.endTime),
       // Keep individual times for editing purposes
-      Time: formatTimeForDisplay(event.Time),
+      startTime: formatTimeForDisplay(event.startTime),
       endTime: event.endTime ? formatTimeForDisplay(event.endTime) : null
     };
     
@@ -136,11 +134,10 @@ export const createEvent = async (req, res) => {
       Title, 
       Description, 
       Date, 
-      Time,
+      startTime,
       Host_User_ID, 
       Venue_ID, 
       Status,
-      type,
       category,
       hostedBy,
       endTime,
@@ -166,11 +163,10 @@ export const createEvent = async (req, res) => {
       Title,
       Description,
       Date,
-      Time,
+      startTime,
       Host_User_ID,
       Venue_ID: resolvedVenueId,
       Status: Status || 'Scheduled',
-      type: type || 'General Event',
       category: category || 'Entertainment',
       hostedBy: hostedBy || 'NWU Events',
       endTime,
@@ -182,7 +178,7 @@ export const createEvent = async (req, res) => {
     // Return created event with formatted time range
     const formattedEvent = {
       ...event.toJSON(),
-      displayTime: createTimeRange(event.Time, event.endTime)
+      displayTime: createTimeRange(event.startTime, event.endTime)
     };
     
     res.status(201).json({
@@ -214,11 +210,10 @@ export const updateEvent = async (req, res) => {
       Title, 
       Description, 
       Date, 
-      Time,
+      startTime,
       Host_User_ID, 
       Venue_ID, 
       Status,
-      type,
       category,
       hostedBy,
       endTime,
@@ -231,11 +226,10 @@ export const updateEvent = async (req, res) => {
       Title, 
       Description, 
       Date, 
-      Time,
+      startTime,
       Host_User_ID, 
       Venue_ID, 
       Status,
-      type,
       category,
       hostedBy,
       endTime,
@@ -247,7 +241,7 @@ export const updateEvent = async (req, res) => {
     // Return updated event with formatted time range
     const formattedEvent = {
       ...event.toJSON(),
-      displayTime: createTimeRange(event.Time, event.endTime)
+      displayTime: createTimeRange(event.startTime, event.endTime)
     };
     
     res.status(200).json({
@@ -280,7 +274,7 @@ export const updateEventStatus = async (req, res) => {
     // Return updated event with formatted time range
     const formattedEvent = {
       ...event.toJSON(),
-      displayTime: createTimeRange(event.Time, event.endTime)
+      displayTime: createTimeRange(event.startTime, event.endTime)
     };
     
     res.status(200).json({

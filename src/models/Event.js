@@ -40,10 +40,10 @@ Event.init(
       allowNull: false,
       field: 'Date'
     },
-    Time: {
+    startTime: {
       type: DataTypes.STRING,
       allowNull: false,
-      field: 'Time'
+      field: 'startTime'
     },
     Host_User_ID: {
       type: DataTypes.INTEGER,
@@ -59,12 +59,6 @@ Event.init(
       type: DataTypes.STRING,
       allowNull: false,
       field: 'Status'
-    },
-    // New fields
-    type: {
-      type: DataTypes.STRING,
-      allowNull: false,
-      defaultValue: 'General Event'
     },
     category: {
       type: DataTypes.STRING,

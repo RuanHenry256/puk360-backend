@@ -120,3 +120,49 @@ export const getHostRsvpTrend = async (req, res) => {
     res.status(500).json({ status: 'error', error: 'Failed to fetch RSVP trend', details: e.message });
   }
 };
+
+// Most recent reviews for a host's events
+export const getHostRecentReviews = async (req, res) => {
+  try {
+    const hostUserId = Number(req.params.hostUserId || req.query.hostUserId);
+    const limit = Math.max(1, Math.min(20, Number(req.query.limit || 5)));
+    if (!hostUserId) return res.status(400).json({ status: 'error', error: 'hostUserId is required' });
+
+    const [rows] = await sequelize.query(
+      `SELECT TOP (:limit)
+         R.Review_ID   AS id,
+         R.Event_ID    AS eventId,
+         E.Title       AS eventTitle,
+         R.Reviewer_User_ID AS reviewerId,
+         R.Rating      AS rating,
+         R.Comment     AS comment,
+         R.[Date]      AS createdAt,
+         U.Name        AS reviewerName
+       FROM [Review] R
+       INNER JOIN [Event]  E ON E.Event_ID = R.Event_ID
+       LEFT  JOIN [User]   U ON U.User_ID = R.Reviewer_User_ID
+       WHERE E.Host_User_ID = :hostUserId
+       ORDER BY R.[Date] DESC, R.Review_ID DESC`,
+      { replacements: { hostUserId, limit } }
+    );
+
+    // Split title if embedded in comment using our delimiter (optional)
+    const data = rows.map((r) => {
+      let title = null;
+      let body = r.comment || '';
+      if (typeof body === 'string') {
+        const marker = '\n---\n';
+        const idx = body.indexOf(marker);
+        if (idx >= 0) {
+          title = body.slice(0, idx).trim();
+          body = body.slice(idx + marker.length).trim();
+        }
+      }
+      return { ...r, title, comment: body };
+    });
+
+    res.json({ status: 'success', data });
+  } catch (e) {
+    res.status(500).json({ status: 'error', error: 'Failed to fetch recent reviews', details: e.message });
+  }
+};

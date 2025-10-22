@@ -12,7 +12,7 @@ Explains how event listing, creation, and management work in the app.
   - Filters: week (Mon–Sun ranges), Category, Campus, Search; Clear all button.
   - Loading and error states; optional `showTopBar` prop for embedded use (host feed).
 - Details view: `puk360-frontend/src/pages/ReviewEventDetail.js`
-  - Fetches `GET /api/events/:id` and renders Title, Description, Date/Time–endTime, Hosted By, Venue/Campus, ImageUrl.
+  - Fetches `GET /api/events/:id` and renders Title, Description, Date/startTime–endTime, Hosted By, Venue/Campus, ImageUrl.
   - “Attendees” metric removed from the UI.
 
 ---
@@ -29,7 +29,7 @@ Explains how event listing, creation, and management work in the app.
 - Controller: `puk360-backend/src/controllers/eventController.js`
   - CRUD via Sequelize; includes `ImageUrl` and `venue` text fields; auto-resolves `Venue_ID` if omitted.
 - Model: `puk360-backend/src/models/Event.js`
-  - DB-mapped fields: `Event_ID`, `Title`, `Description`, `Date (DATE)`, `Time (TIME)`, `endTime (TIME)`, `Host_User_ID`, `Venue_ID`, `Status`, `type`, `category`, `hostedBy`, `venue` (text), `campus`, `ImageUrl`.
+  - DB-mapped fields: `Event_ID`, `Title`, `Description`, `Date (DATE)`, `startTime (TIME)`, `endTime (TIME)`, `Host_User_ID`, `Venue_ID`, `Status`, `category`, `hostedBy`, `venue` (text), `campus`, `ImageUrl`.
 - Validation: `puk360-backend/src/middleware/validation.js`
   - Accepts either `Title` or `title`, and `Date` or `date` (ISO); requires one of `venue` or `campus`.
 - Auth + Host guard:
@@ -50,12 +50,11 @@ curl -X POST http://localhost:5000/api/events \
     "Title": "Open Day",
     "Description": "Campus open day",
     "Date": "2025-10-01",
-    "Time": "10:00",
+    "startTime": "10:00",
     "endTime": "12:00",
     "campus": "Potchefstroom",
     "venue": "Main Hall",
     "category": "Community",
-    "type": "General Event",
     "hostedBy": "NWU Events",
     "ImageUrl": "https://example.com/poster.png"
   }'
@@ -68,4 +67,5 @@ curl -X POST http://localhost:5000/api/events \
 - Images: `ImageUrl` is persisted (backend sanitizes blanks to NULL); frontend renders a placeholder when invalid/missing.
 - Filtering: the feed uses client filters; you can add server-side params to `GET /api/events` as needed.
 - Ownership/roles: write routes are restricted to authenticated, active hosts by middleware.
+ - Admin management: if admins must manage all events, add a role override in the host guard to permit Admin users on POST/PATCH/DELETE and record appropriate audit info.
 

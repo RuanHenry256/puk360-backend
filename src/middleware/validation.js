@@ -11,6 +11,10 @@ export const validateEvent = [
     body('Date').isISO8601(),
     body('date').isISO8601(),
   ], 'Valid date is required'),
+  // startTime is required (HH:mm)
+  body('startTime')
+    .notEmpty().withMessage('startTime is required')
+    .matches(/^\d{2}:\d{2}$/).withMessage('startTime must be HH:mm'),
   // Require either venue text or campus or legacy location
   oneOf([
     body('venue').notEmpty(),

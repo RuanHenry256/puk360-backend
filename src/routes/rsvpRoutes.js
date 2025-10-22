@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { cancelRSVP, getAttendees, JoinEvent } from '../controllers/rsvpController.js';
+import { cancelRSVP, getAttendees, JoinEvent, getUserRsvps } from '../controllers/rsvpController.js';
 
 const router = Router();
 
@@ -153,5 +153,6 @@ router.delete('/:id/join', cancelRSVP);
  *         description: Server error
  */
 router.get('/:id/attendees', getAttendees);
+router.get('/users/:userId', getUserRsvps);
 
 export default router;
