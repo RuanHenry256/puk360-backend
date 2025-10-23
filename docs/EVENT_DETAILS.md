@@ -6,19 +6,10 @@ Explains how the event detail page works, including RSVP and reviews, across the
 
 ## Frontend
 
-- Detail view: `puk360-frontend/src/pages/EventDetails.jsx`
-  - Looks up an event by `eventId` from `sampleEvents` and displays details.
-  - Actions:
-    - Register: currently a TODO; intended to RSVP the user for this event.
-    - Write a review: currently a placeholder alert; intended to open a review flow.
-- Where it comes from
-  - The listing view (`EventListing.jsx`) calls `onSelectEvent(id)`; parent sets `eventId` for details.
-- Planned integration
-  - Fetch live details: `GET /api/events/:id`.
-  - RSVP: `POST /api/events/:id/join` with the current user.
-  - Cancel RSVP: `DELETE /api/events/:id/join`.
-  - Show attendees: `GET /api/events/:id/attendees`.
-  - Reviews: `POST /api/:id/reviews`, `GET /api/:id/reviews` (currently stubbed on backend).
+- Detail view: `puk360-frontend/src/pages/ReviewEventDetail.js`
+  - Fetches `GET /api/events/:id` and renders Title, Description, Date/startTime–endTime, Hosted By, Venue/Campus, and ImageUrl.
+  - Poster renders inline with a 4:3 crop (responsive) and opens a full‑image modal on click.
+  - RSVP actions and Reviews UI are integrated with their respective endpoints.
 
 Example RSVP from the client:
 ```js

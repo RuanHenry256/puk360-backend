@@ -29,7 +29,7 @@ import {
 } from '../controllers/adminController.js';
 import { requireAuth } from '../middleware/auth.js';
 import { getDashboardMetrics } from '../controllers/adminDashboardController.js';
-import { listAuditLogs } from '../controllers/adminController.js';
+import { listAuditLogs, clearAuditLogs } from '../controllers/adminController.js';
 
 const router = Router();
 // Note: Event approval/rejection is not part of the current product flow.
@@ -119,6 +119,20 @@ router.get('/dashboard', requireAuth, getDashboardMetrics);
  *         description: Array of logs
  */
 router.get('/logs', requireAuth, listAuditLogs);
+/**
+ * @swagger
+ * /api/admin/logs/clear:
+ *   post:
+ *     summary: Clear audit logs (irreversible)
+ *     description: Deletes all audit log entries. A final entry is added afterward noting the admin cleared the logs.
+ *     tags: [Admin]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Clear operation result
+ */
+router.post('/logs/clear', requireAuth, clearAuditLogs);
 
 // Host applications moderation
 /**

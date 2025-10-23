@@ -36,3 +36,6 @@ WHERE HP.Activity_Status IN (N'Active', N'Inactive');
 - Form collects free‑text `venue` for display.
 - Backend resolves `Venue_ID` to a default/“Unspecified” row when not provided to satisfy NOT NULL constraint.
 
+## Current iteration (no schema change)
+- Event creation now requires an `ImageUrl` that points to the configured S3 bucket (validated in the controller).
+- No additional columns were added; `ImageUrl` continues to store the public poster URL returned after presigned upload.

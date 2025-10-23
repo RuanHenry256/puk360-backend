@@ -1,5 +1,6 @@
 /** Admin controller */
 import { selectAllHostApplications, reviewHostApplication } from '../data/eventRequestRepo.js';
+import { logEvent } from '../data/auditRepo.js';
 import sequelize from '../config/db.js';
 import {
   listUsers as repoListUsers,
@@ -37,6 +38,25 @@ export const listHostApplications = async (req, res) => {
   }
 };
 
+// Permanently delete all audit logs, then append a single entry indicating the clear operation
+export const clearAuditLogs = async (req, res) => {
+  try {
+    const adminUserId = req.user?.id || null;
+    // Count first for metadata, then delete all
+    let deleted = 0;
+    try {
+      const [cnt] = await sequelize.query("SELECT COUNT(*) AS total FROM dbo.Audit_Log");
+      deleted = Number(cnt?.[0]?.total || 0);
+    } catch { /* table may not exist */ }
+    await sequelize.query("IF OBJECT_ID('dbo.Audit_Log','U') IS NOT NULL DELETE FROM dbo.Audit_Log");
+    // Append a final record indicating logs were cleared
+    try { await logEvent({ eventType: 'admin_cleared_logs', userId: adminUserId, targetType: 'audit', targetId: null, metadata: { deleted } }); } catch {}
+    res.json({ ok: true, deleted });
+  } catch (e) {
+    res.status(500).json({ error: 'Failed to clear audit logs', details: e.message });
+  }
+};
+
 export const reviewHostApp = async (req, res) => {
   try {
     const id = Number(req.params.id);
@@ -45,8 +65,12 @@ export const reviewHostApp = async (req, res) => {
     const reviewerUserId = req.user?.id || null;
     if (!id) return res.status(400).json({ error: 'Missing application id' });
     if (!['APPROVED', 'REJECTED'].includes(decision)) return res.status(400).json({ error: 'Invalid decision' });
-    await reviewHostApplication({ applicationId: id, reviewerUserId, decision, comment });
-    res.json({ ok: true });
+    const result = await reviewHostApplication({ applicationId: id, reviewerUserId, decision, comment });
+    // Audit only when an actual change occurred (avoid double logs from duplicate clicks/requests)
+    if (result?.changed !== false) {
+      logEvent({ eventType: 'host_application_reviewed', userId: reviewerUserId, targetType: 'host_application', targetId: id, metadata: { decision, comment: comment || null } });
+    }
+    res.json({ ok: true, changed: result?.changed !== false });
   } catch (e) {
     res.status(500).json({ error: 'Failed to review application', details: e.message });
   }

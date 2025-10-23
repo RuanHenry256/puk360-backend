@@ -3,6 +3,7 @@
  * Creates and lists host applications for the authenticated user.
  */
 import { insertHostApplication, selectHostApplicationsByUser } from "../data/eventRequestRepo.js";
+import { logEvent } from "../data/auditRepo.js";
 
 function normalizePayload(body = {}) {
   const get = (...keys) => keys.map(k => body[k]).find(v => typeof v === 'string' && v.trim().length > 0);
@@ -61,6 +62,8 @@ export async function submitEventHostRequest(req, res) {
     }
 
     const applicationId = await insertHostApplication({ applicantUserId: userId, orgName, eventType: eventCategory, motivation });
+    // Audit log: host application submitted
+    logEvent({ eventType: 'host_application_submitted', userId, targetType: 'host_application', targetId: applicationId, metadata: { orgName, eventCategory } });
 
     return res.status(201).json({ application_id: applicationId, status: "PENDING" });
   } catch (err) {

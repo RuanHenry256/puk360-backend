@@ -18,6 +18,8 @@ import userRoutes from './routes/userRoutes.js';
 import eventRequestRoutes from './routes/eventRequestRoutes.js';
 import venueRoutes from './routes/venueRoutes.js';
 import hostRoutes from './routes/hostRoutes.js';
+import uploadRoutes from './routes/upload.js';
+import startMaintenanceJobs from './jobs/maintenance.js';
 
 // Swagger is configured via swaggerSpecs and mounted below
 
@@ -51,13 +53,15 @@ app.use(express.json());
 // --- Routes ---
 app.use("/api/auth", authRoutes);
 app.use("/api/events", eventRoutes);
-app.use("/api", reviewRoutes); // (as you had it)
+// Admin before generic '/api' routes to avoid edge 404s when routers don't call next()
 app.use("/api/admin", adminRoutes);
+app.use("/api", reviewRoutes); // (as you had it)
 app.use("/api/users", userRoutes);
 app.use('/api/events', rsvpRoutes);
 app.use('/api/host-applications', eventRequestRoutes);
 app.use('/api/venues', venueRoutes);
 app.use('/api/hosts', hostRoutes);
+app.use('/api', uploadRoutes);
 
 // Root route (so "/" doesn't show "Cannot GET /")
 app.get("/", (_req, res) => {
@@ -153,6 +157,7 @@ async function start() {
     await sequelize.sync(); // sync models (no destructive alters)
     console.log("✅ Database synced");
     listen();
+    try { startMaintenanceJobs(); } catch (e) { console.warn('[maintenance] start failed:', e?.message || e); }
   } catch (error) {
     console.error("❌ Database connection failed:", error.message || error);
     process.exit(1); // fail fast if DB is down

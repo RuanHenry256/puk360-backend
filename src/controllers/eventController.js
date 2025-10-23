@@ -1,5 +1,6 @@
 import Event from '../models/Event.js';
 import Venue from '../models/venue.js';
+import { logEvent } from '../data/auditRepo.js';
 import { Op } from 'sequelize';
 
 // Helper function to format time for display
@@ -145,6 +146,21 @@ export const createEvent = async (req, res) => {
       campus,
       ImageUrl
     } = req.body;
+
+    // Image is required and must be an S3 URL in our bucket
+    const bucket = process.env.S3_BUCKET;
+    const region = process.env.AWS_REGION || 'ap-south-1';
+    const expectedPrefix = bucket ? `https://${bucket}.s3.${region}.amazonaws.com/` : null;
+    const cleanImageUrlRequired = (typeof ImageUrl === 'string') ? ImageUrl.trim() : '';
+    if (!cleanImageUrlRequired) {
+      return res.status(400).json({ error: 'Image is required' });
+    }
+    if (cleanImageUrlRequired.length > 500) {
+      return res.status(400).json({ error: 'Image URL too long' });
+    }
+    if (expectedPrefix && !cleanImageUrlRequired.startsWith(expectedPrefix)) {
+      return res.status(400).json({ error: 'Image URL must be in our S3 bucket' });
+    }
     
     let resolvedVenueId = (Venue_ID !== undefined && Venue_ID !== null && Venue_ID !== '') ? Number(Venue_ID) : undefined;
     if (!resolvedVenueId && process.env.DEFAULT_VENUE_ID) {
@@ -158,7 +174,7 @@ export const createEvent = async (req, res) => {
       resolvedVenueId = v.Venue_ID;
     }
 
-    const cleanImageUrl = (typeof ImageUrl === 'string' && ImageUrl.trim().length) ? ImageUrl.trim() : null;
+    const cleanImageUrl = cleanImageUrlRequired;
     const event = await Event.create({
       Title,
       Description,
@@ -175,6 +191,8 @@ export const createEvent = async (req, res) => {
       ImageUrl: cleanImageUrl
     });
     
+    // Audit: event created
+    try { logEvent({ eventType: 'event_created', userId: req.user?.id || null, targetType: 'event', targetId: event.Event_ID, metadata: { Title, Date, venue, campus } }); } catch {}
     // Return created event with formatted time range
     const formattedEvent = {
       ...event.toJSON(),
@@ -238,6 +256,8 @@ export const updateEvent = async (req, res) => {
       ImageUrl
     });
     
+    // Audit: event updated
+    try { logEvent({ eventType: 'event_updated', userId: req.user?.id || null, targetType: 'event', targetId: event.Event_ID, metadata: { fields: Object.keys(req.body || {}) } }); } catch {}
     // Return updated event with formatted time range
     const formattedEvent = {
       ...event.toJSON(),
@@ -270,6 +290,8 @@ export const updateEventStatus = async (req, res) => {
     }
     const { Status } = req.body;
     await event.update({ Status });
+    // Audit: event status updated
+    try { logEvent({ eventType: 'event_status_updated', userId: req.user?.id || null, targetType: 'event', targetId: event.Event_ID, metadata: { status: Status } }); } catch {}
     
     // Return updated event with formatted time range
     const formattedEvent = {
@@ -302,6 +324,8 @@ export const deleteEvent = async (req, res) => {
       });
     }
     await event.destroy();
+    // Audit: event deleted
+    try { logEvent({ eventType: 'event_deleted', userId: req.user?.id || null, targetType: 'event', targetId: Number(req.params.id) || null, metadata: { Title: event.Title } }); } catch {}
     res.status(204).json({
       status: 'success',
       message: 'Event deleted',

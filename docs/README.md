@@ -5,6 +5,7 @@
   - Includes role-based routing details and default Student role assignment.
 - Events: `EVENTS.md`
 - Event Details: `EVENT_DETAILS.md`
+- Uploads (S3 presign + env): `UPLOADS.md`
 - Swagger API Docs: `API_SWAGGER.md`
 
 New/updated docs:
@@ -13,6 +14,9 @@ New/updated docs:
 - Admin Users (list/edit/delete, roles, host reactivation): `ADMIN_USERS.md`
 - Admin Dashboard + Logs: `ADMIN_DASHBOARD.md` (includes `/api/admin/logs`)
 - Database changes summary: `DATABASE_CHANGES.md`
+
+Environment
+- Requires AWS creds for uploads. See `UPLOADS.md` for `AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY`, `AWS_REGION`, and `S3_BUCKET`.
 
 Notes:
 - Audit logging is implemented in `src/data/auditRepo.js` and currently logs user registrations and logins. Extend by calling `logEvent()` from other controllers to enrich analytics.

@@ -69,3 +69,22 @@ curl -X POST http://localhost:5000/api/events \
 - Ownership/roles: write routes are restricted to authenticated, active hosts by middleware.
  - Admin management: if admins must manage all events, add a role override in the host guard to permit Admin users on POST/PATCH/DELETE and record appropriate audit info.
 
+---
+
+## Poster Uploads (New)
+
+- Frontend now uploads posters directly to S3 using a backend presign endpoint.
+- Endpoint: `POST /api/poster/presign` with body `{ mimeType }` (png, jpg/jpeg, webp, gif).
+- Responds with `{ key, uploadUrl, publicUrl }`. The client `PUT`s the raw file to `uploadUrl`.
+- Event creation requires an `ImageUrl` that points to the configured S3 bucket domain and is ≤ 500 chars.
+- No DB schema changes were needed; we continue to store only `ImageUrl`.
+
+Example presign call:
+```bash
+curl -X POST http://localhost:5000/api/poster/presign \
+  -H "Content-Type: application/json" \
+  -d '{
+    "mimeType": "image/jpeg"
+  }'
+```
+

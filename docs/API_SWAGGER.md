@@ -39,6 +39,8 @@ Tip: Use `POST /api/auth/login` from the UI to obtain a token, then click Author
   - `POST /api/events/{id}/join`
   - `DELETE /api/events/{id}/join`
   - `GET /api/events/{id}/attendees`
+- Uploads: `puk360-backend/src/routes/upload.js`
+  - `POST /api/poster/presign`
 - Reviews (stubs): `puk360-backend/src/routes/reviewRoutes.js`
   - `POST /api/{id}/reviews`
   - `GET /api/{id}/reviews`

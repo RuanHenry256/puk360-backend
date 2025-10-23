@@ -30,6 +30,7 @@ Optional for quick API demos:
   - Database: either a single `AZURE_SQL_CONNECTION_STRING` or discrete `DB_HOST`, `DB_USER`, `DB_PASS`, `DB_NAME`, `DB_PORT`.
   - Auth: `JWT_SECRET` (required)
   - CORS: `CORS_ORIGIN` (defaults to `http://localhost:3000`)
+  - Uploads: `AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY`, `AWS_REGION=ap-south-1`, `S3_BUCKET=puk360-posters-ap-south-1`
 
 2) Install dependencies
 - In `puk360-backend/` run: `npm ci` (or `npm install`)
@@ -95,4 +96,5 @@ Optional for quick API demos:
 - Host guard middleware (`requireActiveHost`) restricts event creation/updates/deletes to active hosts (see `src/middleware/hostGuard.js`).
 - Host analytics endpoints under `/api/hosts/:id/...` (stats, top-events, category-mix, rsvp-trend).
 - Admin host applications endpoints under `/api/admin/host-applications` (list + review with decision/comment) that update `Host_Profile` and assign the Host role.
+- Poster uploads: `POST /api/poster/presign` returns S3 presigned PUT; event creation now requires `ImageUrl` in our bucket.
 

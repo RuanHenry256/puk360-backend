@@ -103,58 +103,65 @@ export async function reviewHostApplication({ applicationId, reviewerUserId, dec
     const finalStatus = normalizedDecision === 'APPROVED' ? 'Approved' : normalizedDecision === 'REJECTED' ? 'Rejected' : null;
     if (!finalStatus) throw new Error('Invalid decision');
 
-    // Update application row
-    const up = new sql.Request(tx);
-    up
-      .input('Status', sql.NVarChar(50), finalStatus)
-      .input('Review_Comment', sql.NVarChar(sql.MAX), comment || null)
-      .input('Reviewers_User_ID', sql.Int, reviewerUserId || null)
-      .input('Application_ID', sql.Int, applicationId);
-    await up.query(`
-      UPDATE Host_Applications
-      SET Status = @Status,
-          Review_Comment = @Review_Comment,
-          Reviewers_User_ID = @Reviewers_User_ID
-      WHERE Application_ID = @Application_ID;
-    `);
-
-    // On approval: ensure Host role + activate Host_Profile
-    if (finalStatus === 'Approved') {
-      const applicantId = app.Applicant_User_ID;
-
-      // Ensure Host role mapping
-      const roleReq = new sql.Request(tx);
-      const roleRes = await roleReq.query(`SELECT Role_ID FROM Roles WHERE Role_Name = 'Host'`);
-      const hostRoleId = roleRes.recordset?.[0]?.Role_ID || 2; // fallback to 2
-      const ensureReq = new sql.Request(tx);
-      ensureReq.input('uid', sql.Int, applicantId).input('rid', sql.Int, hostRoleId);
-      await ensureReq.query(`
-        IF NOT EXISTS (SELECT 1 FROM UserRoles WHERE User_ID = @uid AND Role_ID = @rid)
-          INSERT INTO UserRoles (User_ID, Role_ID) VALUES (@uid, @rid);
+    // If status is already the desired one, treat as no-op to avoid duplicate side effects/logs
+    const currentStatus = String(app.Status || '').toUpperCase();
+    let changed = true;
+    if (currentStatus === String(finalStatus).toUpperCase()) {
+      changed = false;
+    } else {
+      // Update application row
+      const up = new sql.Request(tx);
+      up
+        .input('Status', sql.NVarChar(50), finalStatus)
+        .input('Review_Comment', sql.NVarChar(sql.MAX), comment || null)
+        .input('Reviewers_User_ID', sql.Int, reviewerUserId || null)
+        .input('Application_ID', sql.Int, applicationId);
+      await up.query(`
+        UPDATE Host_Applications
+        SET Status = @Status,
+            Review_Comment = @Review_Comment,
+            Reviewers_User_ID = @Reviewers_User_ID
+        WHERE Application_ID = @Application_ID;
       `);
 
-      // Activate Host_Profile (insert if missing)
-      const hpReq = new sql.Request(tx);
-      hpReq.input('uid', sql.Int, applicantId);
-      const hpRes = await hpReq.query(`SELECT TOP 1 * FROM Host_Profile WHERE User_ID = @uid`);
-      if (hpRes.recordset.length === 0) {
-        const ins = new sql.Request(tx);
-        ins.input('uid', sql.Int, applicantId);
-        await ins.query(`
-          INSERT INTO Host_Profile (User_ID, Approval_Status, Activity_Status)
-          VALUES (@uid, 'Approved', 'Active');
+      // On approval: ensure Host role + activate Host_Profile
+      if (finalStatus === 'Approved') {
+        const applicantId = app.Applicant_User_ID;
+
+        // Ensure Host role mapping
+        const roleReq = new sql.Request(tx);
+        const roleRes = await roleReq.query(`SELECT Role_ID FROM Roles WHERE Role_Name = 'Host'`);
+        const hostRoleId = roleRes.recordset?.[0]?.Role_ID || 2; // fallback to 2
+        const ensureReq = new sql.Request(tx);
+        ensureReq.input('uid', sql.Int, applicantId).input('rid', sql.Int, hostRoleId);
+        await ensureReq.query(`
+          IF NOT EXISTS (SELECT 1 FROM UserRoles WHERE User_ID = @uid AND Role_ID = @rid)
+            INSERT INTO UserRoles (User_ID, Role_ID) VALUES (@uid, @rid);
         `);
-      } else {
-        const upd = new sql.Request(tx);
-        upd.input('uid', sql.Int, applicantId);
-        await upd.query(`
-          UPDATE Host_Profile SET Approval_Status='Approved', Activity_Status='Active' WHERE User_ID=@uid;
-        `);
+
+        // Activate Host_Profile (insert if missing)
+        const hpReq = new sql.Request(tx);
+        hpReq.input('uid', sql.Int, applicantId);
+        const hpRes = await hpReq.query(`SELECT TOP 1 * FROM Host_Profile WHERE User_ID = @uid`);
+        if (hpRes.recordset.length === 0) {
+          const ins = new sql.Request(tx);
+          ins.input('uid', sql.Int, applicantId);
+          await ins.query(`
+            INSERT INTO Host_Profile (User_ID, Approval_Status, Activity_Status)
+            VALUES (@uid, 'Approved', 'Active');
+          `);
+        } else {
+          const upd = new sql.Request(tx);
+          upd.input('uid', sql.Int, applicantId);
+          await upd.query(`
+            UPDATE Host_Profile SET Approval_Status='Approved', Activity_Status='Active' WHERE User_ID=@uid;
+          `);
+        }
       }
     }
 
     await tx.commit();
-    return { ok: true };
+    return { ok: true, changed };
   } catch (e) {
     try { await tx.rollback(); } catch {}
     throw e;
