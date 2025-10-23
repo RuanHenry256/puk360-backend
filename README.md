@@ -117,7 +117,7 @@ Server runs at:
 - **Dev 4** → Registrations & RSVP.  
 - **Dev 5** → Reviews system.  
 - **Dev 6** → Admin panel & analytics.  
-- **Dev 7** → CI/CD, monitoring, and deployment automation.  
+- **Dev 7** → CI/CD, monitoring, and deployment automation.  TEST
 
 ---
 
