@@ -150,7 +150,11 @@ export const reactivateHostAccount = async (req, res) => {
 // List audit logs (read-only). Supports ?limit=500 and optional ?q=search
 export const listAuditLogs = async (req, res) => {
   try {
-    const limit = Math.max(1, Math.min(5000, Number(req.query.limit || 500)));
+    // Support lifetime export via limit=all|lifetime|0
+    const rawLimit = (req.query.limit ?? '').toString().trim().toLowerCase();
+    const isAll = rawLimit === 'all' || rawLimit === 'lifetime' || rawLimit === '0' || rawLimit === 'false';
+    // Always use OFFSET/FETCH for consistency; for "all" use a very large cap
+    const limitNum = isAll ? 2147483647 : Math.max(1, Math.min(5000, Number(rawLimit || 500)));
     const q = (req.query.q || '').toString().trim();
 
     // If table doesn't exist, return empty
@@ -163,8 +167,7 @@ export const listAuditLogs = async (req, res) => {
       : '';
 
     // Using OFFSET/FETCH for parameterized limit
-    const sql = `
-      DECLARE @lim INT = ${limit};
+    const baseSql = `
       SELECT L.Log_ID AS id,
              L.Created_At AS createdAt,
              L.Event_Type AS eventType,
@@ -177,16 +180,16 @@ export const listAuditLogs = async (req, res) => {
       FROM dbo.Audit_Log L
       LEFT JOIN [User] U ON U.User_ID = L.User_ID
       ${where}
-      ORDER BY L.Created_At DESC, L.Log_ID DESC
-      OFFSET 0 ROWS FETCH NEXT @lim ROWS ONLY`;
+      ORDER BY L.Created_At DESC, L.Log_ID DESC`;
 
     let rows;
     if (q) {
       const like = `%${q.replace(/'/g, "''")}%`;
-      // sequelize.query does not support named params here; embed safely
-      const [data] = await sequelize.query(sql.replace('@q', `'${like}'`));
+      const sql = baseSql.replace(/@q/g, `'${like}'`) + ` OFFSET 0 ROWS FETCH NEXT ${limitNum} ROWS ONLY`;
+      const [data] = await sequelize.query(sql);
       rows = data || [];
     } else {
+      const sql = baseSql + ` OFFSET 0 ROWS FETCH NEXT ${limitNum} ROWS ONLY`;
       const [data] = await sequelize.query(sql);
       rows = data || [];
     }

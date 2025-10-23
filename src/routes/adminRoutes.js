@@ -15,9 +15,6 @@
  */
 import { Router } from 'express';
 import {
-  getPendingEvents,
-  approveEvent,
-  rejectEvent,
   getHosts,
   approveHost,
   getAnalytics,
@@ -35,57 +32,8 @@ import { getDashboardMetrics } from '../controllers/adminDashboardController.js'
 import { listAuditLogs } from '../controllers/adminController.js';
 
 const router = Router();
-/**
- * @swagger
- * /api/admin/pending-events:
- *   get:
- *     summary: List events awaiting approval
- *     tags: [Admin]
- *     security:
- *       - bearerAuth: []
- *     responses:
- *       200:
- *         description: Array of pending events
- */
-router.get('/pending-events', requireAuth, getPendingEvents);
-/**
- * @swagger
- * /api/admin/events/{id}/approve:
- *   patch:
- *     summary: Approve an event
- *     tags: [Admin]
- *     security:
- *       - bearerAuth: []
- *     parameters:
- *       - in: path
- *         name: id
- *         required: true
- *         schema:
- *           type: integer
- *     responses:
- *       200:
- *         description: Event approved
- */
-router.patch('/events/:id/approve', requireAuth, approveEvent);
-/**
- * @swagger
- * /api/admin/events/{id}/reject:
- *   patch:
- *     summary: Reject an event
- *     tags: [Admin]
- *     security:
- *       - bearerAuth: []
- *     parameters:
- *       - in: path
- *         name: id
- *         required: true
- *         schema:
- *           type: integer
- *     responses:
- *       200:
- *         description: Event rejected
- */
-router.patch('/events/:id/reject', requireAuth, rejectEvent);
+// Note: Event approval/rejection is not part of the current product flow.
+// Events are posted immediately by hosts; there is no admin moderation endpoint.
 /**
  * @swagger
  * /api/admin/hosts:
