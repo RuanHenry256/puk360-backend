@@ -42,7 +42,8 @@ temp/
 # Database/local data (adjust as needed)
 *.sqlite
 *.sqlite3
-data/
+# Only ignore the top-level data dir, not src/data
+/data/
 
 # OS/Editor files
 .DS_Store
